@@ -1,3 +1,7 @@
+// What this file is: the editable form for the Education section — a list
+// of schools/degrees with optional extra details.
+// In plain terms: the form where you list your schools and degrees.
+
 import type { EducationEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';

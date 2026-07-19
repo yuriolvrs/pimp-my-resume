@@ -1,3 +1,7 @@
+// What this file is: TypeScript compiler settings for Node-side config
+// files, like vite.config.ts, which run under Node rather than the browser.
+// In plain terms: the same idea as the other TypeScript settings file, but
+// for config files instead of app code.
 {
   "compilerOptions": {
     "target": "ES2022",

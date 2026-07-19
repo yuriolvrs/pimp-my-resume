@@ -1,3 +1,11 @@
+// What this file is: a generic, reusable "add/remove items from a list" UI
+// component. It owns list chrome only (add/remove buttons); callers supply
+// the fields for each item. Every repeating list in the app (skills,
+// experience, projects, education, writing samples, links, bullets) is
+// built on top of this.
+// In plain terms: a reusable building block for any list where you can add
+// or remove entries — used all over the Profile page.
+
 import type { ReactNode } from 'react';
 
 interface EditableListProps<T> {

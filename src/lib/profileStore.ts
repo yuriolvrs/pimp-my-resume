@@ -1,3 +1,8 @@
+// What this file is: small helper functions for loading and saving the
+// single user profile to Dexie's `profiles` table.
+// In plain terms: the code that reads and saves your profile info to your
+// browser's storage.
+
 import { db } from './db';
 import type { Profile } from '../types';
 

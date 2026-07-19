@@ -1,4 +1,7 @@
-// Placeholder — posting analysis and generation arrive in later phases.
+// What this file is: placeholder for the Jobs route. Posting analysis and
+// document generation land here in later phases (PRD Phases 3-5).
+// In plain terms: the "Jobs" screen — just a placeholder for now, more is
+// coming later.
 export default function JobsPage() {
   return (
     <section>

@@ -1,3 +1,7 @@
+# What this file is: tells Git which files/folders to never track
+# (dependencies, build output, secrets, editor files).
+# In plain terms: a list of files Git should ignore and never save.
+
 # dependencies
 node_modules/
 

@@ -1,7 +1,11 @@
-// Shared data models — the single source of truth for the whole app.
-// Dexie tables (src/lib/db.ts) and LLM prompts (src/prompts/) derive from these.
-// Transcribed from PRD.md §6. Keep this file authoritative; do not redefine these
-// shapes elsewhere.
+// What this file is: the TypeScript types for every piece of data the app
+// works with (profile, job postings, generated documents, LaTeX templates).
+// This is the single source of truth — Dexie tables (src/lib/db.ts) and
+// future LLM prompts (src/prompts/) derive from these shapes. Transcribed
+// from PRD.md §6; keep this file authoritative, don't redefine these shapes
+// elsewhere.
+// In plain terms: this is the blueprint describing what a "profile," a
+// "job posting," and a "generated resume" look like as data.
 
 /** Bump when the persisted shape changes; used for export/import migrations. */
 export const SCHEMA_VERSION = 1;

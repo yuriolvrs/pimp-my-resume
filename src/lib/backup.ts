@@ -1,3 +1,11 @@
+// What this file is: the logic behind exporting all local data to a JSON
+// file, importing it back, and deleting everything. Split into pure
+// functions (buildBackup/validateBackup/parseBackup — unit-tested in
+// backup.test.ts) and thin Dexie-touching wrappers (exportAllData/
+// importAllData/deleteAllData).
+// In plain terms: the code behind the "Export," "Import," and "Delete All
+// Data" buttons on the Profile page.
+
 import { db } from './db';
 import { SCHEMA_VERSION } from '../types';
 import type { Generation, JobPosting, LatexTemplate, Profile } from '../types';

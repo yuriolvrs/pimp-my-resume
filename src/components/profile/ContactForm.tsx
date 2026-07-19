@@ -1,3 +1,8 @@
+// What this file is: the editable form for the Contact section of the
+// profile — name, email, phone, location, and a list of links.
+// In plain terms: the form where you fill in your name, email, and other
+// contact details.
+
 import type { Contact, ContactLink } from '../../types';
 import { EditableList } from '../EditableList';
 

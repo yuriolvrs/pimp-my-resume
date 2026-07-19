@@ -1,3 +1,8 @@
+// What this file is: the app shell — the top nav bar plus the router that
+// maps URLs to page components.
+// In plain terms: the outer frame of the app — the header/navigation, and
+// wherever a page gets shown depending on which tab you're on.
+
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';

@@ -1,3 +1,11 @@
+// What this file is: sets up the local IndexedDB database (via the Dexie
+// library) with one table per data type from src/types. This is where all
+// user data actually lives — there is no server-side storage (CLAUDE.md
+// architecture invariant). Row shapes come from the shared types; this file
+// only declares indexes.
+// In plain terms: this is the app's local storage — a small database that
+// lives inside your browser, not on any server.
+
 import Dexie, { type EntityTable } from 'dexie';
 import type {
   Profile,
@@ -6,10 +14,6 @@ import type {
   LatexTemplate,
 } from '../types';
 import { SCHEMA_VERSION } from '../types';
-
-// IndexedDB-backed local store. All user data lives here in the browser —
-// there is no server-side storage (CLAUDE.md architecture invariant).
-// Row shapes are the shared types; this module only declares indexes.
 
 export class AppDatabase extends Dexie {
   profiles!: EntityTable<Profile, 'id'>;

@@ -1,3 +1,9 @@
+// What this file is: the editable form for the Experience section — a list
+// of jobs, each with company/title/dates/location and a list of resume
+// bullets.
+// In plain terms: the form where you list your past jobs and what you did
+// at each one.
+
 import type { ExperienceEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';

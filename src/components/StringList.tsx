@@ -1,3 +1,10 @@
+// What this file is: a specialization of EditableList for the common case
+// of a list of plain text entries (or paragraphs). Used for skill items,
+// education details, writing samples, and bullets. The `multiline` flag
+// switches between a single-line input and a textarea.
+// In plain terms: a simpler version of the list component, just for lists
+// of plain text.
+
 import { EditableList } from './EditableList';
 
 interface StringListProps {

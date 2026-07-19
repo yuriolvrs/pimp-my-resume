@@ -1,3 +1,9 @@
+// What this file is: unit tests for the pure functions in backup.ts —
+// building a backup file, validating its shape, and parsing one back from
+// JSON, including malformed-JSON and mismatched-schema-version cases.
+// In plain terms: tests that make sure exporting and importing your data
+// actually works, even when the file is broken or out of date.
+
 import { describe, expect, it } from 'vitest';
 import { SCHEMA_VERSION } from '../types';
 import { BackupValidationError, buildBackup, parseBackup, validateBackup } from './backup';

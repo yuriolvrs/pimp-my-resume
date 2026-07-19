@@ -1,3 +1,8 @@
+// What this file is: the editable form for the Projects section — a list
+// of projects, each with a name, description, bullets, and links.
+// In plain terms: the form where you list personal or work projects you've
+// built.
+
 import type { ContactLink, ProjectEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';

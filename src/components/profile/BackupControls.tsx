@@ -1,3 +1,9 @@
+// What this file is: the UI for exporting/importing your data as JSON and
+// for deleting all local data, with a two-step confirmation and
+// error/success messaging.
+// In plain terms: the buttons for backing up, restoring, or wiping your
+// data.
+
 import { useRef, useState } from 'react';
 import {
   BackupValidationError,

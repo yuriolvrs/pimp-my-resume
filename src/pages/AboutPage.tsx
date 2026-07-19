@@ -1,4 +1,8 @@
-// Privacy contract per PRD §10. Provider name is filled in once chosen (Phase 2).
+// What this file is: the About/Privacy route. States the app's data
+// handling contract verbatim per PRD §10. Provider name gets filled in once
+// chosen (Phase 2).
+// In plain terms: the page that explains how your data is handled and kept
+// private.
 export default function AboutPage() {
   return (
     <section className="space-y-4">

@@ -1,3 +1,9 @@
+// What this file is: the editable form for writing samples — free-text
+// blocks that later phases will use to mimic your writing style when
+// generating cover letters.
+// In plain terms: where you paste examples of your own writing (like an
+// old cover letter) so future AI-generated text sounds like you.
+
 import { StringList } from '../StringList';
 
 export function WritingSamplesForm({

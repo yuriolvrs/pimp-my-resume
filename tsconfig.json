@@ -1,3 +1,8 @@
+// What this file is: the root TypeScript config — a "solution" file that
+// just references the two real configs below (one for app code, one for
+// Node-side config files).
+// In plain terms: points TypeScript at the two real settings files used in
+// this project.
 {
   "files": [],
   "references": [

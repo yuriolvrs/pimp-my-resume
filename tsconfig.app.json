@@ -1,3 +1,7 @@
+// What this file is: TypeScript compiler settings for all app code in
+// src/, with strict mode enabled per CLAUDE.md.
+// In plain terms: the rules TypeScript uses to check the app's code for
+// mistakes.
 {
   "compilerOptions": {
     "target": "ES2022",

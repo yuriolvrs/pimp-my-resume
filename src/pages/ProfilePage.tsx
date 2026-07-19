@@ -1,3 +1,10 @@
+// What this file is: the Profile route's page component. Loads the profile
+// from Dexie on mount, composes all the section forms plus BackupControls,
+// and autosaves edits (on every change, except the two large free-text
+// fields which save on blur).
+// In plain terms: the whole "Profile" screen you see when you go to the
+// Profile tab.
+
 import { useCallback, useEffect, useState } from 'react';
 import type { Profile } from '../types';
 import { loadProfile, saveProfile } from '../lib/profileStore';

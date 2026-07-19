@@ -1,3 +1,9 @@
+// What this file is: the editable form for the Skills section — a list of
+// skill groups (e.g. "Languages"), each containing a list of individual
+// skills.
+// In plain terms: the form where you list your skills, grouped into
+// categories.
+
 import type { SkillGroup } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
