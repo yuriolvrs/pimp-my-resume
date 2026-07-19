@@ -9,10 +9,12 @@ node_modules/
 dist/
 dist-ssr/
 *.tsbuildinfo
+.wrangler/
 
 # secrets / local env — never commit (CLAUDE.md guardrail)
 .env
 .env.*
+!.env.example
 .dev.vars
 *.local
 

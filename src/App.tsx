@@ -7,6 +7,7 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
 import AboutPage from './pages/AboutPage.tsx';
+import DevLlmPage from './pages/DevLlmPage.tsx';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
@@ -42,6 +43,8 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/about" element={<AboutPage />} />
+          {/* Unlinked dev-only route for Phase 2's proxy test harness. */}
+          <Route path="/dev/llm" element={<DevLlmPage />} />
           <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>
       </main>

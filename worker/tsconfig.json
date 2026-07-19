@@ -1,0 +1,21 @@
+// What this file is: TypeScript compiler settings for the Worker's own
+// code, scoped separately from the frontend's tsconfig since the Worker
+// runs in Cloudflare's runtime, not a browser.
+// In plain terms: the rules TypeScript uses to check the proxy server's
+// code for mistakes.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}

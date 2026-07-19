@@ -3,6 +3,17 @@
 ## Project
 Privacy-first job application assistant. See PRD.md for full spec. Work in the phases defined there; do not build ahead of the current phase.
 
+## Engineering principles
+General working style, in addition to the project-specific rules below (Conventions/Guardrails win on overlap).
+
+**Think before coding.** State assumptions explicitly rather than guessing silently. If a request has multiple valid interpretations, present them instead of picking one unannounced. If a simpler approach exists than what was asked for, say so and push back before building the complicated version.
+
+**Simplicity first.** Write the minimum code that solves the problem — no speculative features, no configurability that wasn't requested, no abstraction built for a single call site, no error handling for scenarios that can't occur. If a first draft came out bloated, rewrite it smaller before moving on.
+
+**Surgical changes.** Touch only what the request requires. Don't refactor, reformat, or "improve" adjacent code/comments while in a file for an unrelated reason, and match existing style even when you'd choose differently. Clean up only the imports/variables/functions your own change made unused — flag pre-existing dead code instead of deleting it.
+
+**Goal-driven execution.** Turn vague asks into a verifiable goal before starting ("fix the bug" → reproduce it, then make the repro pass). For multi-step work, state a short plan up front with a concrete check per step, so progress can be verified without stopping to ask at each one.
+
 ## Architecture invariants (never violate)
 - All user data lives in the browser via Dexie/IndexedDB. Never add server-side storage, logging of user content, or analytics on content.
 - The frontend never contains or receives an LLM API key. All LLM calls go through the Cloudflare Worker proxy.
@@ -12,6 +23,7 @@ Privacy-first job application assistant. See PRD.md for full spec. Work in the p
 - LLM provider is abstracted in one module (`src/lib/llm.ts`); no provider-specific code elsewhere.
 
 ## Conventions
+- Every new file gets a short header comment at the very top: one line explaining what it is/does in normal technical terms, and one line in plain English (`// In plain terms: ...`). Skip only where the format has no comment syntax (strict JSON) or the file is already self-describing prose (the root .md docs).
 - TypeScript strict mode everywhere, including the Worker.
 - Shared types for all data models live in `src/types/` and are the single source of truth; Dexie tables and prompts derive from them.
 - LLM prompts request JSON-only output; parse defensively (strip fences, validate shape, one retry). Prompt templates live in `src/prompts/`.

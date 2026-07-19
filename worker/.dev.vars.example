@@ -1,0 +1,7 @@
+# What this file is: a template for worker/.dev.vars (gitignored), the
+# local secrets file `wrangler dev` reads. Copy this to .dev.vars and fill
+# in a real key -- never commit .dev.vars itself.
+# In plain terms: shows you what to put in your local secrets file to test
+# the proxy against a real LLM.
+
+LLM_API_KEY=your-groq-api-key-here
