@@ -6,6 +6,7 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
+import JobDetailPage from './pages/JobDetailPage.tsx';
 import AboutPage from './pages/AboutPage.tsx';
 import DevLlmPage from './pages/DevLlmPage.tsx';
 
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/profile" replace />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/jobs/:id" element={<JobDetailPage />} />
           <Route path="/about" element={<AboutPage />} />
           {/* Unlinked dev-only route for Phase 2's proxy test harness. */}
           <Route path="/dev/llm" element={<DevLlmPage />} />

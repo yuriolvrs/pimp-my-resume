@@ -30,3 +30,16 @@ export async function loadProfile(): Promise<Profile> {
 export async function saveProfile(profile: Profile): Promise<void> {
   await db.profiles.put(profile);
 }
+
+// Whether the profile has enough content to be worth comparing against a job
+// posting. Used to gate the "Analyze" action so a blank profile can't be sent
+// to the LLM (it would only ever produce gaps, never matches).
+export function hasProfileContent(profile: Profile): boolean {
+  return (
+    profile.summary.trim() !== '' ||
+    profile.skills.length > 0 ||
+    profile.experience.length > 0 ||
+    profile.projects.length > 0 ||
+    profile.education.length > 0
+  );
+}

@@ -3,12 +3,12 @@
 > Claude Code: read this at the start of every session; update it truthfully at the end. Only mark items done that are implemented AND tested.
 
 ## Current phase
-Phase 2 — Proxy & LLM layer (built + verified up to the provider boundary; real hello call pending the user's Groq key — see Known issues)
+Phase 4 — Resume generation (not yet started)
 
 ## Phase checklist
 - [x] Phase 1 — Foundation: scaffold, types, Dexie, routing, profile screens, export/import/delete-all
-- [~] Phase 2 — Proxy & LLM layer (code complete and locally verified; needs a real Groq key for the final end-to-end proof — not yet checked off)
-- [ ] Phase 3 — Posting analysis
+- [x] Phase 2 — Proxy & LLM layer (real end-to-end hello call confirmed against Groq via `/dev/llm`)
+- [x] Phase 3 — Posting analysis (paste posting → LLM analysis, editable, stored per posting; verified live against Groq)
 - [ ] Phase 4 — Resume generation
 - [ ] Phase 5 — Cover letter
 - [ ] Phase 6 — LaTeX pipeline
@@ -37,13 +37,17 @@ Phase 2 — Proxy & LLM layer (built + verified up to the provider boundary; rea
   - `src/pages/DevLlmPage.tsx` at unlinked route `/dev/llm` — manual "hello" test harness, not linked in nav, not part of the product.
   - `.env.example` (`VITE_PROXY_URL`) and `worker/.dev.vars.example` (`LLM_API_KEY`) document the env vars needed; `.gitignore` updated to keep the `.example` files trackable while still ignoring the real secret files.
   - **Verified without a real key:** with no `LLM_API_KEY` set, the worker still correctly forwarded a request to the real `https://api.groq.com/openai/v1/chat/completions` and Groq replied with a genuine `401 invalid_api_key` — proving the full request path (app → worker → provider) is wired correctly. CORS allow/deny and oversized-payload rejection (413) also confirmed live via curl.
+- Phase 3 — Posting analysis (verified: `npm run test` — 49 tests, 18 new — and `npm run build` both green; a Playwright pass through the real running app, against the real Groq API via the local Worker, drove the full flow: paste posting → save → Analyze → edit a keyword → reload → confirm persisted → posting list shows "Analyzed" → visited an unknown `/jobs/:id` and confirmed the not-found state):
+  - `src/prompts/analyzePosting.ts` (first file in `src/prompts/`) — `buildAnalyzePostingPrompt`, `serializeProfileForPrompt` (profile rendered as compact plain text so the model can quote it verbatim as evidence; `writingSamples` and contact details omitted), `isJobAnalysis` type guard (structural, element-type-checked so malformed shapes are caught and retried by `generateStructured` rather than reaching the UI). Both variable inputs are length-capped and truncated independently before assembly, keeping requests comfortably under the Worker's 100KB body limit. Unit-tested in `analyzePosting.test.ts`.
+  - `src/lib/jobStore.ts` — mirrors `profileStore.ts`'s pattern for the multi-record `jobPostings` table: `newJobPosting`, `listJobPostings`, `loadJobPosting`, `saveJobPosting`, `deleteJobPosting`, and pure `postingLabel` (unit-tested in `jobStore.test.ts`).
+  - `src/lib/profileStore.ts` — added `hasProfileContent`, gates the Analyze button so a blank profile can't be sent to the LLM.
+  - `src/components/jobs/AnalysisEditor.tsx` — the analysis is fully editable (a deliberate choice, not just PRD-minimum "rendered"), built entirely from the existing `StringList`/`EditableList` primitives so a bad or incomplete LLM extraction can be corrected by hand before later phases consume it.
+  - `src/pages/JobsPage.tsx` (rewritten) — paste + save a new posting, list saved postings newest-first. `src/pages/JobDetailPage.tsx` (new, route `/jobs/:id`, the app's first route param) — edit posting text, run/re-run analysis, edit the result, delete the posting (two-step confirm, matching `BackupControls`).
+  - No changes needed to `src/types/index.ts`, `src/lib/db.ts`, or `src/lib/backup.ts` — the Phase 3 shapes, Dexie table/index, and backup export/import already existed from Phase 1.
+  - **Real-model finding, addressed:** live testing against `llama-3.1-8b-instant` showed it would sometimes return `profileEvidence` as a bare string instead of an array — correctly rejected by `isJobAnalysis` and retried by `generateStructured`, but a real failure mode. Strengthened the prompt with an explicit array-shape reminder and example; confirmed reliable (multiple live runs) afterward. Residual, expected model-quality noise (e.g. occasionally mis-classifying a requirement, or leaving `profileEvidence` empty) is exactly why the analysis is editable rather than read-only — not a code bug, and not something a stricter guard should paper over. Programmatic verbatim-evidence checking is intentionally deferred to Phase 4's `sourceMap` work, per the PRD.
 
 ## Known issues / open questions
-- **Phase 2 needs a real end-to-end "hello" proof.** Manual steps for the user (not done by Claude Code — CLAUDE.md guardrail: no deploy/secrets handling):
-  1. Get a free Groq API key at console.groq.com.
-  2. `cd worker`, copy `.dev.vars.example` to `.dev.vars`, fill in the real key.
-  3. `cd worker && npm run dev` (starts the worker on :8787), and in another terminal `npm run dev` (frontend) — then visit `/dev/llm` and click "Test connection"; should now return real JSON instead of the 401 seen during this session's verification.
-  4. Later, when ready to deploy: `wrangler login`, `wrangler secret put LLM_API_KEY` (from `worker/`), `npx wrangler deploy`, then add the deployed Cloudflare Pages origin to `ALLOWED_ORIGINS` in `worker/wrangler.toml`.
+- Not yet deployed. When ready: `wrangler login`, `wrangler secret put LLM_API_KEY` (from `worker/`), `npx wrangler deploy`, then add the deployed Cloudflare Pages origin to `ALLOWED_ORIGINS` in `worker/wrangler.toml`.
 - The worker's in-memory rate limiter is per-isolate and resets on cold start/redeploy — basic abuse dampening, not a hard global guarantee. Fine for a personal-use proxy; documented in `worker/src/lib.ts` if it ever needs upgrading to KV/Durable Objects.
 
 ## Session log
@@ -51,3 +55,5 @@ Phase 2 — Proxy & LLM layer (built + verified up to the provider boundary; rea
 - 2026-07-19 — Phase 1 Pass A: scaffolded Vite+React+TS+Tailwind+Router, shared types, Dexie skeleton, routing shell; build/test/dev verified.
 - 2026-07-19 — Phase 1 Pass B: profile input screens (contact/summary/skills/experience/projects/education/writing samples) with Dexie autosave, JSON export/import, delete-all; unit tests + Playwright manual verification, fixed a message-hiding bug found during verification. Phase 1 complete.
 - 2026-07-19 — Phase 2: built Cloudflare Worker proxy (worker/), provider-agnostic src/lib/llm.ts + src/lib/json.ts, /dev/llm test harness. Verified locally end-to-end against the real Groq API (401 with no key, proving the path works); real hello call is a documented manual follow-up once the user adds a key. Also codified the file-header-comment convention into CLAUDE.md and applied it to every new file.
+- 2026-07-21 — Phase 2 closed out: user added a real Groq key to worker/.dev.vars, started `wrangler dev` alongside the frontend, and confirmed a genuine `{"hello": "world"}` response via /dev/llm (200 OK in worker logs). Phase 2 complete; Phase 3 (posting analysis) is next per PRD.md.
+- 2026-07-21 — Phase 3: posting analysis. New src/prompts/ (analyzePosting.ts), src/lib/jobStore.ts, /jobs list + /jobs/:id detail routes, AnalysisEditor (fully editable, per user's explicit choice). Unit tests (49 total, 18 new) and build both green. Live Playwright run against the real Groq API caught a real model failure mode (profileEvidence returned as a string, not array) which the guard correctly rejected and retried; fixed by strengthening the prompt, then reconfirmed working. Phase 3 complete; Phase 4 (resume generation) is next per PRD.md.
