@@ -5,6 +5,7 @@
 // old cover letter) so future AI-generated text sounds like you.
 
 import { StringList } from '../StringList';
+import { Card, SectionTitle } from '../ui/primitives';
 
 export function WritingSamplesForm({
   value,
@@ -16,12 +17,10 @@ export function WritingSamplesForm({
   onCommit: (writingSamples: string[]) => void;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Writing samples</h2>
-      <p className="text-sm text-slate-500">
-        Paste a few pieces of your own writing (past cover letters, emails, etc.) — used later to
-        match your voice when generating a cover letter.
-      </p>
+    <Card className="p-6">
+      <SectionTitle sub="Used later to match your voice when generating a cover letter">
+        Writing Samples
+      </SectionTitle>
       <StringList
         items={value}
         onChange={onChange}
@@ -31,6 +30,6 @@ export function WritingSamplesForm({
         addLabel="Add sample"
         emptyLabel="No writing samples yet."
       />
-    </section>
+    </Card>
   );
 }

@@ -10,9 +10,7 @@
 import type { JobAnalysis, RequirementMatch } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+import { Card, FieldInput, FieldTextarea, SectionTitle } from '../ui/primitives';
 
 export function AnalysisEditor({
   value,
@@ -22,19 +20,18 @@ export function AnalysisEditor({
   onChange: (analysis: JobAnalysis) => void;
 }) {
   return (
-    <div className="space-y-6">
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Role summary</h2>
-        <textarea
-          className={inputClass}
-          rows={2}
+    <div className="space-y-4">
+      <Card className="p-5">
+        <SectionTitle>Role Summary</SectionTitle>
+        <FieldTextarea
           value={value.roleSummary}
-          onChange={(e) => onChange({ ...value, roleSummary: e.target.value })}
+          onChange={(roleSummary) => onChange({ ...value, roleSummary })}
+          rows={2}
         />
-      </section>
+      </Card>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Requirements</h2>
+      <Card className="p-5">
+        <SectionTitle>Requirements</SectionTitle>
         <StringList
           items={value.requirements}
           onChange={(requirements) => onChange({ ...value, requirements })}
@@ -42,20 +39,20 @@ export function AnalysisEditor({
           addLabel="Add requirement"
           emptyLabel="No requirements listed."
         />
-      </section>
+      </Card>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Keywords</h2>
+      <Card className="p-5">
+        <SectionTitle>Keywords</SectionTitle>
         <StringList
           items={value.keywords}
           onChange={(keywords) => onChange({ ...value, keywords })}
           addLabel="Add keyword"
           emptyLabel="No keywords listed."
         />
-      </section>
+      </Card>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Matches</h2>
+      <Card className="p-5">
+        <SectionTitle sub="Your profile evidence for each requirement">Matches</SectionTitle>
         <EditableList<RequirementMatch>
           items={value.matches}
           onChange={(matches) => onChange({ ...value, matches })}
@@ -64,14 +61,13 @@ export function AnalysisEditor({
           emptyLabel="No matches yet."
           renderItem={(match, update) => (
             <div className="space-y-2">
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="Requirement"
                 value={match.requirement}
-                onChange={(e) => update({ ...match, requirement: e.target.value })}
+                onChange={(requirement) => update({ ...match, requirement })}
               />
               <div>
-                <span className="mb-1 block text-sm font-medium text-slate-700">
+                <span className="mb-1 block text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
                   Profile evidence
                 </span>
                 <StringList
@@ -85,10 +81,12 @@ export function AnalysisEditor({
             </div>
           )}
         />
-      </section>
+      </Card>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Gaps</h2>
+      <Card className="p-5">
+        <SectionTitle sub="Requirements the posting needs that aren't evidenced in your profile">
+          Gaps
+        </SectionTitle>
         <StringList
           items={value.gaps}
           onChange={(gaps) => onChange({ ...value, gaps })}
@@ -96,7 +94,7 @@ export function AnalysisEditor({
           addLabel="Add gap"
           emptyLabel="No gaps listed."
         />
-      </section>
+      </Card>
     </div>
   );
 }

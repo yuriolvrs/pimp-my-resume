@@ -7,9 +7,7 @@
 import type { ExperienceEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+import { Card, FieldInput, SectionTitle } from '../ui/primitives';
 
 export function ExperienceForm({
   value,
@@ -19,8 +17,10 @@ export function ExperienceForm({
   onChange: (experience: ExperienceEntry[]) => void;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Experience</h2>
+    <Card className="p-6">
+      <SectionTitle sub={`${value.length} position${value.length !== 1 ? 's' : ''}`}>
+        Work Experience
+      </SectionTitle>
       <EditableList<ExperienceEntry>
         items={value}
         onChange={onChange}
@@ -30,39 +30,36 @@ export function ExperienceForm({
         renderItem={(entry, update) => (
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="Company"
                 value={entry.company}
-                onChange={(e) => update({ ...entry, company: e.target.value })}
+                onChange={(company) => update({ ...entry, company })}
               />
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="Title"
                 value={entry.title}
-                onChange={(e) => update({ ...entry, title: e.target.value })}
+                onChange={(title) => update({ ...entry, title })}
               />
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="Start (e.g. 2023-01)"
                 value={entry.start}
-                onChange={(e) => update({ ...entry, start: e.target.value })}
+                onChange={(start) => update({ ...entry, start })}
               />
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="End (blank = present)"
                 value={entry.end ?? ''}
-                onChange={(e) => update({ ...entry, end: e.target.value })}
+                onChange={(end) => update({ ...entry, end })}
               />
-              <input
-                className={inputClass}
+              <FieldInput
                 placeholder="Location"
                 value={entry.location ?? ''}
-                onChange={(e) => update({ ...entry, location: e.target.value })}
+                onChange={(location) => update({ ...entry, location })}
               />
             </div>
             <div>
-              <span className="mb-1 block text-sm font-medium text-slate-700">Bullets</span>
+              <span className="mb-1 block text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                Bullets
+              </span>
               <StringList
                 items={entry.bullets}
                 onChange={(bullets) => update({ ...entry, bullets })}
@@ -75,6 +72,6 @@ export function ExperienceForm({
           </div>
         )}
       />
-    </section>
+    </Card>
   );
 }

@@ -6,9 +6,7 @@
 import type { ContactLink, ProjectEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+import { Card, FieldInput, FieldTextarea, SectionTitle } from '../ui/primitives';
 
 export function ProjectsForm({
   value,
@@ -18,8 +16,10 @@ export function ProjectsForm({
   onChange: (projects: ProjectEntry[]) => void;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Projects</h2>
+    <Card className="p-6">
+      <SectionTitle sub={`${value.length} project${value.length !== 1 ? 's' : ''}`}>
+        Projects
+      </SectionTitle>
       <EditableList<ProjectEntry>
         items={value}
         onChange={onChange}
@@ -28,21 +28,21 @@ export function ProjectsForm({
         emptyLabel="No projects yet."
         renderItem={(entry, update) => (
           <div className="space-y-2">
-            <input
-              className={inputClass}
+            <FieldInput
               placeholder="Project name"
               value={entry.name}
-              onChange={(e) => update({ ...entry, name: e.target.value })}
+              onChange={(name) => update({ ...entry, name })}
             />
-            <textarea
-              className={inputClass}
+            <FieldTextarea
               rows={2}
               placeholder="Description"
               value={entry.description}
-              onChange={(e) => update({ ...entry, description: e.target.value })}
+              onChange={(description) => update({ ...entry, description })}
             />
             <div>
-              <span className="mb-1 block text-sm font-medium text-slate-700">Bullets</span>
+              <span className="mb-1 block text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                Bullets
+              </span>
               <StringList
                 items={entry.bullets}
                 onChange={(bullets) => update({ ...entry, bullets })}
@@ -53,7 +53,9 @@ export function ProjectsForm({
               />
             </div>
             <div>
-              <span className="mb-1 block text-sm font-medium text-slate-700">Links</span>
+              <span className="mb-1 block text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                Links
+              </span>
               <EditableList<ContactLink>
                 items={entry.links}
                 onChange={(links) => update({ ...entry, links })}
@@ -62,17 +64,15 @@ export function ProjectsForm({
                 emptyLabel="No links yet."
                 renderItem={(link, updateLink) => (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <input
-                      className={inputClass}
+                    <FieldInput
                       placeholder="Label (e.g. Demo)"
                       value={link.label}
-                      onChange={(e) => updateLink({ ...link, label: e.target.value })}
+                      onChange={(label) => updateLink({ ...link, label })}
                     />
-                    <input
-                      className={inputClass}
+                    <FieldInput
                       placeholder="https://..."
                       value={link.url}
-                      onChange={(e) => updateLink({ ...link, url: e.target.value })}
+                      onChange={(url) => updateLink({ ...link, url })}
                     />
                   </div>
                 )}
@@ -81,6 +81,6 @@ export function ProjectsForm({
           </div>
         )}
       />
-    </section>
+    </Card>
   );
 }

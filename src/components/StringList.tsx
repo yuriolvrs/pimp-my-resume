@@ -32,7 +32,7 @@ export function StringList({
   emptyLabel,
 }: StringListProps) {
   const inputClass =
-    'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+    'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400/25 focus:border-blue-400 transition-all';
 
   return (
     <EditableList<string>

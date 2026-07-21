@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import type { JobPosting, Profile } from '../types';
 import {
   deleteJobPosting,
@@ -21,9 +22,7 @@ import { buildAnalyzePostingPrompt, isJobAnalysis, MAX_POSTING_CHARS } from '../
 import { generateStructured } from '../lib/llm';
 import { JsonParseError } from '../lib/json';
 import { AnalysisEditor } from '../components/jobs/AnalysisEditor';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+import { Btn, Card } from '../components/ui/primitives';
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -105,100 +104,139 @@ export default function JobDetailPage() {
   if (posting === 'missing') {
     return (
       <section className="space-y-3">
-        <p className="text-slate-600">Posting not found.</p>
-        <Link to="/jobs" className="text-sm text-slate-600 hover:text-slate-900">
-          ← All postings
+        <p className="text-sm text-slate-500">Posting not found.</p>
+        <Link
+          to="/jobs"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-900 transition-colors font-medium w-fit"
+        >
+          <ArrowLeft size={15} />
+          Back to Jobs
         </Link>
       </section>
     );
   }
 
   if (!posting || !profile) {
-    return <p className="text-slate-500">Loading…</p>;
+    return <p className="text-sm text-slate-400">Loading…</p>;
   }
 
   return (
-    <div className="space-y-6">
-      <Link to="/jobs" className="text-sm text-slate-600 hover:text-slate-900">
-        ← All postings
-      </Link>
-
-      <div>
-        <h1 className="text-2xl font-semibold">{postingLabel(posting)}</h1>
-      </div>
-
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Posting text</h2>
-        <textarea
-          className={inputClass}
-          rows={10}
-          value={posting.rawText}
-          onChange={(e) => updateLive({ rawText: e.target.value })}
-          onBlur={() => commit({ rawText: posting.rawText })}
-        />
-        {posting.rawText.length > MAX_POSTING_CHARS && (
-          <p className="text-sm text-slate-500">
-            Only the first {MAX_POSTING_CHARS.toLocaleString()} characters are sent for analysis.
-          </p>
-        )}
-      </section>
-
-      {!hasProfileContent(profile) && (
-        <p className="text-sm text-slate-600">
-          Add your experience or skills on the{' '}
-          <Link to="/profile" className="underline hover:text-slate-900">
-            Profile page
-          </Link>{' '}
-          first — matches and gaps need something to compare against.
-        </p>
-      )}
-
-      <button
-        type="button"
-        onClick={handleAnalyze}
-        disabled={status === 'loading' || posting.rawText.trim() === '' || !hasProfileContent(profile)}
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-      >
-        {status === 'loading' ? 'Analyzing…' : posting.analysis ? 'Re-analyze' : 'Analyze'}
-      </button>
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      {posting.analysis ? (
-        <AnalysisEditor value={posting.analysis} onChange={(analysis) => update({ analysis })} />
-      ) : (
-        <p className="text-sm text-slate-400">No analysis yet.</p>
-      )}
-
-      <section className="space-y-2 border-t border-slate-200 pt-4">
+    <div className="pb-16">
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          to="/jobs"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-900 transition-colors font-medium"
+        >
+          <ArrowLeft size={15} />
+          Back to Jobs
+        </Link>
         {!confirmingDelete ? (
-          <button
-            type="button"
-            onClick={() => setConfirmingDelete(true)}
-            className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
+          <Btn size="sm" variant="danger" onClick={() => setConfirmingDelete(true)}>
             Delete posting
-          </button>
+          </Btn>
         ) : (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700">Are you sure? This cannot be undone.</span>
-            <button
-              type="button"
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-600">Delete this posting?</span>
+            <Btn
+              size="sm"
               onClick={handleConfirmDelete}
-              className="rounded-md bg-red-600 px-3 py-1.5 font-medium text-white hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-500 focus:ring-red-600/30"
             >
               Yes, delete
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(false)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-100"
-            >
+            </Btn>
+            <Btn size="sm" variant="secondary" onClick={() => setConfirmingDelete(false)}>
               Cancel
-            </button>
+            </Btn>
           </div>
         )}
-      </section>
+      </div>
+
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-slate-900">{postingLabel(posting)}</h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5 items-start">
+        <Card className="p-5 lg:sticky lg:top-20">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-4">
+            Posting Text
+          </p>
+          <textarea
+            className="w-full text-sm text-slate-600 leading-relaxed bg-transparent resize-none outline-none border border-transparent rounded-xl focus:border-blue-300 focus:bg-blue-50/20 px-2 py-2 transition-all max-h-[70vh] overflow-y-auto"
+            rows={16}
+            value={posting.rawText}
+            onChange={(e) => updateLive({ rawText: e.target.value })}
+            onBlur={() => commit({ rawText: posting.rawText })}
+          />
+          {posting.rawText.length > MAX_POSTING_CHARS && (
+            <p className="text-xs text-slate-400 mt-2">
+              Only the first {MAX_POSTING_CHARS.toLocaleString()} characters are sent for analysis.
+            </p>
+          )}
+        </Card>
+
+        <div className="space-y-4">
+          {!hasProfileContent(profile) && (
+            <p className="text-sm text-slate-500">
+              Add your experience or skills on the{' '}
+              <Link to="/profile" className="underline hover:text-slate-900">
+                Profile page
+              </Link>{' '}
+              first — matches and gaps need something to compare against.
+            </p>
+          )}
+
+          {!posting.analysis ? (
+            <Card className="p-10 flex flex-col items-center text-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg">
+                <Sparkles size={22} className="text-white" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-semibold text-slate-900">Analyze this posting</h3>
+                <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
+                  Extract requirements, find keyword matches, identify gaps — then edit anything
+                  before generating documents.
+                </p>
+              </div>
+              <Btn
+                onClick={handleAnalyze}
+                disabled={
+                  status === 'loading' || posting.rawText.trim() === '' || !hasProfileContent(profile)
+                }
+                className="min-w-[140px] justify-center"
+              >
+                {status === 'loading' ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    Run Analysis
+                  </>
+                )}
+              </Btn>
+              {error && <p className="text-xs text-red-600">{error}</p>}
+            </Card>
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <Btn
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleAnalyze}
+                  disabled={status === 'loading' || !hasProfileContent(profile)}
+                >
+                  <Sparkles size={13} />
+                  {status === 'loading' ? 'Analyzing…' : 'Re-analyze'}
+                </Btn>
+              </div>
+              {error && <p className="text-xs text-red-600">{error}</p>}
+              <AnalysisEditor value={posting.analysis} onChange={(analysis) => update({ analysis })} />
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { ProjectsForm } from '../components/profile/ProjectsForm';
 import { EducationForm } from '../components/profile/EducationForm';
 import { WritingSamplesForm } from '../components/profile/WritingSamplesForm';
 import { BackupControls } from '../components/profile/BackupControls';
+import { Card, FieldTextarea, SectionTitle } from '../components/ui/primitives';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -53,14 +54,14 @@ export default function ProfilePage() {
   }
 
   if (!profile) {
-    return <p className="text-slate-500">Loading…</p>;
+    return <p className="text-sm text-slate-400">Loading…</p>;
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <p className="mt-1 text-slate-600">
+    <div className="space-y-4 pb-16">
+      <div className="mb-3">
+        <h1 className="text-lg font-semibold text-slate-900">Profile</h1>
+        <p className="text-sm text-slate-400 mt-0.5">
           Enter your details once — this is the source data every generated resume and cover
           letter draws from.
         </p>
@@ -68,17 +69,16 @@ export default function ProfilePage() {
 
       <ContactForm value={profile.contact} onChange={(contact) => update({ contact })} />
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Summary</h2>
-        <textarea
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
-          rows={3}
+      <Card className="p-6">
+        <SectionTitle sub="2–4 sentences that open your resume">Summary</SectionTitle>
+        <FieldTextarea
           value={profile.summary}
-          placeholder="A short professional summary..."
-          onChange={(e) => updateLive({ summary: e.target.value })}
+          onChange={(summary) => updateLive({ summary })}
           onBlur={() => commit({ summary: profile.summary })}
+          placeholder="A short professional summary..."
+          rows={3}
         />
-      </section>
+      </Card>
 
       <SkillsForm value={profile.skills} onChange={(skills) => update({ skills })} />
       <ExperienceForm value={profile.experience} onChange={(experience) => update({ experience })} />

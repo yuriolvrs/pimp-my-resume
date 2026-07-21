@@ -7,11 +7,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { CheckCircle, Circle, Plus } from 'lucide-react';
 import type { JobPosting } from '../types';
 import { listJobPostings, newJobPosting, postingLabel, saveJobPosting } from '../lib/jobStore';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none';
+import { Badge, Btn, Card, FieldTextarea, SectionTitle } from '../components/ui/primitives';
 
 export default function JobsPage() {
   const navigate = useNavigate();
@@ -33,58 +32,74 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Jobs</h1>
-        <p className="mt-1 text-slate-600">
-          Paste a job posting to analyze it against your profile, then generate tailored
-          documents (later phases).
+    <div className="space-y-6 pb-16">
+      <div className="mb-3">
+        <h1 className="text-lg font-semibold text-slate-900">Jobs</h1>
+        <p className="text-sm text-slate-400 mt-0.5">
+          Paste postings, run analysis, tailor your documents
         </p>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">New posting</h2>
-        <textarea
-          className={inputClass}
-          rows={8}
-          value={rawText}
-          placeholder="Paste the full job posting text here..."
-          onChange={(e) => setRawText(e.target.value)}
-        />
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={rawText.trim() === ''}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-        >
-          Save posting
-        </button>
-      </section>
+      <Card className="p-6">
+        <SectionTitle sub="Paste the full posting text — all data stays in your browser">
+          Add a Job Posting
+        </SectionTitle>
+        <div className="space-y-3">
+          <FieldTextarea
+            value={rawText}
+            onChange={setRawText}
+            placeholder="Paste the full job posting text here — responsibilities, requirements, qualifications, compensation, etc."
+            rows={9}
+          />
+          <div className="flex justify-end pt-1">
+            <Btn onClick={handleSave} disabled={rawText.trim() === ''}>
+              <Plus size={14} />
+              Save Posting
+            </Btn>
+          </div>
+        </div>
+      </Card>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Saved postings</h2>
+      <div>
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
+          Saved Postings{postings !== null && ` — ${postings.length}`}
+        </p>
         {postings === null ? (
-          <p className="text-slate-500">Loading…</p>
+          <p className="text-sm text-slate-400">Loading…</p>
         ) : postings.length === 0 ? (
-          <p className="text-sm text-slate-400">No postings yet.</p>
+          <div className="py-20 text-center text-sm text-slate-300 border-2 border-dashed border-slate-200 rounded-2xl bg-white">
+            No postings saved yet
+          </div>
         ) : (
           <div className="space-y-3">
             {postings.map((posting) => (
-              <Link
-                key={posting.id}
-                to={`/jobs/${posting.id}`}
-                className="block rounded-md border border-slate-200 bg-white p-3 hover:bg-slate-50"
-              >
-                <p className="font-medium">{postingLabel(posting)}</p>
-                <p className="text-sm text-slate-500">
-                  {new Date(posting.createdAt).toLocaleDateString()} ·{' '}
-                  {posting.analysis ? 'Analyzed' : 'Not analyzed'}
-                </p>
+              <Link key={posting.id} to={`/jobs/${posting.id}`} className="block">
+                <Card className="group p-5 hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.1)] transition-all">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-slate-900 truncate">
+                      {postingLabel(posting)}
+                    </h3>
+                    {posting.analysis ? (
+                      <Badge color="green">
+                        <CheckCircle size={10} />
+                        Analyzed
+                      </Badge>
+                    ) : (
+                      <Badge color="slate">
+                        <Circle size={10} />
+                        Not analyzed
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Saved {new Date(posting.createdAt).toLocaleDateString()}
+                  </p>
+                </Card>
               </Link>
             ))}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

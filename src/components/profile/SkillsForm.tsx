@@ -7,9 +7,7 @@
 import type { SkillGroup } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
-
-const inputClass =
-  'w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm font-medium focus:border-slate-500 focus:outline-none';
+import { Card, FieldInput, SectionTitle } from '../ui/primitives';
 
 export function SkillsForm({
   value,
@@ -19,8 +17,8 @@ export function SkillsForm({
   onChange: (skills: SkillGroup[]) => void;
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Skills</h2>
+    <Card className="p-6">
+      <SectionTitle sub="Used to match against job requirements">Skills</SectionTitle>
       <EditableList<SkillGroup>
         items={value}
         onChange={onChange}
@@ -29,11 +27,10 @@ export function SkillsForm({
         emptyLabel="No skill groups yet."
         renderItem={(group, update) => (
           <div className="space-y-2">
-            <input
-              className={inputClass}
+            <FieldInput
               placeholder="Category (e.g. Languages)"
               value={group.category}
-              onChange={(e) => update({ ...group, category: e.target.value })}
+              onChange={(category) => update({ ...group, category })}
             />
             <StringList
               items={group.items}
@@ -45,6 +42,6 @@ export function SkillsForm({
           </div>
         )}
       />
-    </section>
+    </Card>
   );
 }

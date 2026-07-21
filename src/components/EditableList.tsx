@@ -7,6 +7,8 @@
 // or remove entries — used all over the Profile page.
 
 import type { ReactNode } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Btn } from './ui/primitives';
 
 interface EditableListProps<T> {
   items: T[];
@@ -45,30 +47,31 @@ export function EditableList<T>({
 
   return (
     <div className="space-y-3">
-      {items.length === 0 && <p className="text-sm text-slate-400">{emptyLabel}</p>}
+      {items.length === 0 && (
+        <div className="py-8 text-center text-xs text-slate-300 border-2 border-dashed border-slate-100 rounded-xl">
+          {emptyLabel}
+        </div>
+      )}
       {items.map((item, index) => (
         <div
           key={index}
-          className="flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3"
+          className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4"
         >
           <div className="flex-1">{renderItem(item, (next) => updateAt(index, next), index)}</div>
           <button
             type="button"
             onClick={() => removeAt(index)}
-            className="shrink-0 rounded-md px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600"
+            className="shrink-0 text-slate-300 hover:text-red-400 transition-colors p-0.5"
             aria-label="Remove"
           >
-            Remove
+            <Trash2 size={13} />
           </button>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={add}
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
-      >
+      <Btn type="button" size="sm" variant="secondary" onClick={add}>
+        <Plus size={13} />
         {addLabel}
-      </button>
+      </Btn>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 // data.
 
 import { useRef, useState } from 'react';
+import { Download, Upload } from 'lucide-react';
 import {
   BackupValidationError,
   deleteAllData,
@@ -12,6 +13,7 @@ import {
   importAllData,
   parseBackup,
 } from '../../lib/backup';
+import { Btn, Card, SectionTitle } from '../ui/primitives';
 
 export function BackupControls({ onDataChanged }: { onDataChanged: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,30 +66,23 @@ export function BackupControls({ onDataChanged }: { onDataChanged: () => void })
   }
 
   return (
-    <section className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-lg font-semibold">Data</h2>
-      <p className="text-sm text-slate-500">
-        Your data lives only in this browser. Export it to back it up or move to another device.
-      </p>
+    <Card className="p-6">
+      <SectionTitle sub="Your data lives only in this browser — export it to back up or move to another device">
+        Data
+      </SectionTitle>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {message && !error && <p className="text-sm text-green-600">{message}</p>}
+      {error && <p className="mb-3 text-xs text-red-600">{error}</p>}
+      {message && !error && <p className="mb-3 text-xs text-emerald-600">{message}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={handleExport}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-        >
+        <Btn size="sm" variant="secondary" onClick={handleExport}>
+          <Download size={13} />
           Export JSON
-        </button>
-        <button
-          type="button"
-          onClick={handleImportClick}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-        >
+        </Btn>
+        <Btn size="sm" variant="secondary" onClick={handleImportClick}>
+          <Upload size={13} />
           Import JSON
-        </button>
+        </Btn>
         <input
           ref={fileInputRef}
           type="file"
@@ -97,33 +92,21 @@ export function BackupControls({ onDataChanged }: { onDataChanged: () => void })
         />
 
         {!confirmingDelete ? (
-          <button
-            type="button"
-            onClick={() => setConfirmingDelete(true)}
-            className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
+          <Btn size="sm" variant="danger" onClick={() => setConfirmingDelete(true)}>
             Delete All Data
-          </button>
+          </Btn>
         ) : (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-700">Are you sure? This cannot be undone.</span>
-            <button
-              type="button"
-              onClick={handleConfirmDelete}
-              className="rounded-md bg-red-600 px-3 py-1.5 font-medium text-white hover:bg-red-700"
-            >
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-600">Are you sure? This cannot be undone.</span>
+            <Btn size="sm" onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-500 focus:ring-red-600/30">
               Yes, delete everything
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(false)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-100"
-            >
+            </Btn>
+            <Btn size="sm" variant="secondary" onClick={() => setConfirmingDelete(false)}>
               Cancel
-            </button>
+            </Btn>
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }

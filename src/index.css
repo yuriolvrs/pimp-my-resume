@@ -1,7 +1,13 @@
-/* What this file is: the global stylesheet — just the Tailwind CSS
-   directives that generate all utility classes used throughout the app.
+/* What this file is: the global stylesheet — self-hosted font declarations
+   plus the Tailwind CSS directives that generate all utility classes used
+   throughout the app.
    In plain terms: the file that turns on all the styling used everywhere
    else. */
+@import './assets/fonts/outfit.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+}

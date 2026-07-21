@@ -3,7 +3,8 @@
 // In plain terms: the outer frame of the app — the header/navigation, and
 // wherever a page gets shown depending on which tab you're on.
 
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useMatch } from 'react-router-dom';
+import { Briefcase, FileText, Shield, User } from 'lucide-react';
 import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
 import JobDetailPage from './pages/JobDetailPage.tsx';
@@ -12,23 +13,42 @@ import DevLlmPage from './pages/DevLlmPage.tsx';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
-    'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-    isActive
-      ? 'bg-slate-900 text-white'
-      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+    'flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
+    isActive ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700',
   ].join(' ');
 
 export default function App() {
+  const onJobDetail = useMatch('/jobs/:id');
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
-          <span className="text-base font-semibold">Job Application Assistant</span>
-          <nav className="flex gap-1">
+    <div className="min-h-screen bg-[#f5f6f8] text-slate-900">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        <div className="mx-auto flex max-w-4xl h-[54px] items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+              <FileText size={14} className="text-white" />
+            </div>
+            <span className="text-sm font-semibold text-slate-900 tracking-tight">
+              Job Application Assistant
+            </span>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200">
+              <Shield size={10} className="text-slate-400" />
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                Local only
+              </span>
+            </div>
+          </div>
+
+          <nav className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <NavLink to="/profile" className={navLinkClass}>
+              <User size={13} />
               Profile
             </NavLink>
-            <NavLink to="/jobs" className={navLinkClass}>
+            <NavLink
+              to="/jobs"
+              className={({ isActive }) => navLinkClass({ isActive: isActive || Boolean(onJobDetail) })}
+            >
+              <Briefcase size={13} />
               Jobs
             </NavLink>
             <NavLink to="/about" className={navLinkClass}>
