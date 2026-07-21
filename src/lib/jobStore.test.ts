@@ -14,6 +14,21 @@ function posting(overrides: Partial<JobPosting>): JobPosting {
 }
 
 describe('postingLabel', () => {
+  it('prefers an explicit title over the analysis role summary', () => {
+    const p = posting({
+      title: 'Staff Engineer',
+      rawText: 'Some raw text',
+      analysis: {
+        roleSummary: 'Senior Frontend Engineer',
+        requirements: [],
+        keywords: [],
+        matches: [],
+        gaps: [],
+      },
+    });
+    expect(postingLabel(p)).toBe('Staff Engineer');
+  });
+
   it('prefers the analysis role summary', () => {
     const p = posting({
       rawText: 'Some raw text',

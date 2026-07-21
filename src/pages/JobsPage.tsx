@@ -10,11 +10,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Plus } from 'lucide-react';
 import type { JobPosting } from '../types';
 import { listJobPostings, newJobPosting, postingLabel, saveJobPosting } from '../lib/jobStore';
-import { Badge, Btn, Card, FieldTextarea, SectionTitle } from '../components/ui/primitives';
+import { Badge, Btn, Card, FieldInput, FieldTextarea, SectionTitle } from '../components/ui/primitives';
 
 export default function JobsPage() {
   const navigate = useNavigate();
   const [postings, setPostings] = useState<JobPosting[] | null>(null);
+  const [title, setTitle] = useState('');
+  const [company, setCompany] = useState('');
   const [rawText, setRawText] = useState('');
 
   const refresh = useCallback(() => {
@@ -26,7 +28,7 @@ export default function JobsPage() {
   }, [refresh]);
 
   async function handleSave() {
-    const posting = newJobPosting(rawText);
+    const posting = newJobPosting(rawText, title.trim() || undefined, company.trim() || undefined);
     await saveJobPosting(posting);
     navigate(`/jobs/${posting.id}`);
   }
@@ -45,7 +47,17 @@ export default function JobsPage() {
           Add a Job Posting
         </SectionTitle>
         <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <FieldInput
+              label="Job Title"
+              value={title}
+              onChange={setTitle}
+              placeholder="Senior Frontend Engineer"
+            />
+            <FieldInput label="Company" value={company} onChange={setCompany} placeholder="Acme Corp" />
+          </div>
           <FieldTextarea
+            label="Posting Text"
             value={rawText}
             onChange={setRawText}
             placeholder="Paste the full job posting text here — responsibilities, requirements, qualifications, compensation, etc."
@@ -77,7 +89,7 @@ export default function JobsPage() {
                 <Card className="group p-5 hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.1)] transition-all">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-sm font-semibold text-slate-900 truncate">
-                      {postingLabel(posting)}
+                      {posting.title?.trim() || postingLabel(posting)}
                     </h3>
                     {posting.analysis ? (
                       <Badge color="green">
@@ -92,6 +104,7 @@ export default function JobsPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-400">
+                    {posting.company?.trim() && `${posting.company.trim()} · `}
                     Saved {new Date(posting.createdAt).toLocaleDateString()}
                   </p>
                 </Card>

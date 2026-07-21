@@ -22,9 +22,21 @@ export function emptyProfile(): Profile {
   };
 }
 
+// Skills used to be grouped ({ category, items }); flattens any
+// still-stored profile from before that shape changed to a plain string list.
+function normalizeSkills(skills: unknown): string[] {
+  if (!Array.isArray(skills)) return [];
+  return skills.flatMap((skill) => {
+    if (typeof skill === 'string') return [skill];
+    const items = (skill as { items?: unknown } | null)?.items;
+    return Array.isArray(items) ? items.filter((item): item is string => typeof item === 'string') : [];
+  });
+}
+
 export async function loadProfile(): Promise<Profile> {
   const existing = await db.profiles.get(DEFAULT_PROFILE_ID);
-  return existing ?? emptyProfile();
+  if (!existing) return emptyProfile();
+  return { ...existing, skills: normalizeSkills(existing.skills) };
 }
 
 export async function saveProfile(profile: Profile): Promise<void> {

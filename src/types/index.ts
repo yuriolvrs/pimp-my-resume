@@ -27,16 +27,15 @@ export interface Contact {
   links: ContactLink[];
 }
 
-export interface SkillGroup {
-  category: string;
-  items: string[];
-}
-
 export interface ExperienceEntry {
   company: string;
   title: string;
-  start: string;
-  end?: string;
+  startMonth?: string;
+  startYear?: string;
+  endMonth?: string;
+  endYear?: string;
+  /** When true, this is the current position; end date is ignored/cleared. */
+  current: boolean;
   location?: string;
   bullets: string[];
 }
@@ -52,8 +51,12 @@ export interface EducationEntry {
   school: string;
   degree: string;
   field?: string;
-  start: string;
-  end?: string;
+  startMonth?: string;
+  startYear?: string;
+  endMonth?: string;
+  endYear?: string;
+  /** When true, still studying here; end date is ignored/cleared. */
+  current: boolean;
   details?: string[];
 }
 
@@ -62,7 +65,7 @@ export interface Profile {
   id: string;
   contact: Contact;
   summary: string;
-  skills: SkillGroup[];
+  skills: string[];
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
   education: EducationEntry[];
@@ -90,6 +93,8 @@ export interface JobAnalysis {
 export interface JobPosting {
   id: string;
   createdAt: number;
+  title?: string;
+  company?: string;
   rawText: string;
   analysis?: JobAnalysis;
 }
@@ -107,7 +112,7 @@ export type GenerationType = 'resume' | 'coverLetter';
 export interface ResumeContent {
   contact: Contact;
   summary: string;
-  skills: SkillGroup[];
+  skills: string[];
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
   education: EducationEntry[];

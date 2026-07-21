@@ -153,6 +153,7 @@ export default function JobDetailPage() {
 
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-slate-900">{postingLabel(posting)}</h1>
+        {posting.company?.trim() && <p className="text-sm text-slate-400 mt-0.5">{posting.company.trim()}</p>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5 items-start">

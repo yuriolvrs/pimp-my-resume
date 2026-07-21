@@ -15,6 +15,7 @@ interface StringListProps {
   multiline?: boolean;
   addLabel?: string;
   emptyLabel?: string;
+  hideAddButton?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ export function StringList({
   multiline = false,
   addLabel = 'Add',
   emptyLabel,
+  hideAddButton = false,
 }: StringListProps) {
   const inputClass =
     'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400/25 focus:border-blue-400 transition-all';
@@ -41,6 +43,7 @@ export function StringList({
       newItem={() => ''}
       addLabel={addLabel}
       emptyLabel={emptyLabel}
+      hideAddButton={hideAddButton}
       renderItem={(value, update) =>
         multiline ? (
           <textarea

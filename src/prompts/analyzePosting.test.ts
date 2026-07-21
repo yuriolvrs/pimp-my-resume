@@ -85,12 +85,14 @@ describe('serializeProfileForPrompt', () => {
   it('includes experience company/title/bullets and skills', () => {
     const profile: Profile = {
       ...emptyProfile(),
-      skills: [{ category: 'Languages', items: ['TypeScript', 'Go'] }],
+      skills: ['TypeScript', 'Go'],
       experience: [
         {
           company: 'Acme',
           title: 'Senior Engineer',
-          start: '2021-03',
+          startMonth: 'March',
+          startYear: '2021',
+          current: false,
           bullets: ['Led the React rewrite'],
         },
       ],
@@ -119,7 +121,7 @@ describe('buildAnalyzePostingPrompt', () => {
   it('includes the posting text, profile evidence, and instructions', () => {
     const profile: Profile = {
       ...emptyProfile(),
-      experience: [{ company: 'Acme', title: 'Engineer', start: '2020', bullets: [] }],
+      experience: [{ company: 'Acme', title: 'Engineer', startYear: '2020', current: false, bullets: [] }],
     };
     const prompt = buildAnalyzePostingPrompt('We need a React developer.', profile);
     expect(prompt).toContain('We need a React developer.');
@@ -146,7 +148,8 @@ describe('buildAnalyzePostingPrompt', () => {
       experience: Array.from({ length: 200 }, (_, i) => ({
         company: `Company ${i}`,
         title: `Title ${i}`,
-        start: '2020',
+        startYear: '2020',
+        current: false,
         bullets: [`Bullet ${i}`],
       })),
     };

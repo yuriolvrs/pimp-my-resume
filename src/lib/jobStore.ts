@@ -11,10 +11,12 @@ import type { JobPosting } from '../types';
 const LABEL_MAX_CHARS = 80;
 
 /** Builds a new, unsaved posting from pasted text. Caller must saveJobPosting it. */
-export function newJobPosting(rawText: string): JobPosting {
+export function newJobPosting(rawText: string, title?: string, company?: string): JobPosting {
   return {
     id: crypto.randomUUID(),
     createdAt: Date.now(),
+    title,
+    company,
     rawText,
   };
 }
@@ -42,6 +44,7 @@ export async function deleteJobPosting(id: string): Promise<void> {
 // in the postings list.
 export function postingLabel(posting: JobPosting): string {
   const source =
+    posting.title?.trim() ||
     posting.analysis?.roleSummary.trim() ||
     posting.rawText
       .split('\n')

@@ -17,6 +17,8 @@ interface EditableListProps<T> {
   newItem: () => T;
   addLabel?: string;
   emptyLabel?: string;
+  /** Hide the trailing Add button -- for sections whose Add lives in a header instead. */
+  hideAddButton?: boolean;
 }
 
 /**
@@ -32,6 +34,7 @@ export function EditableList<T>({
   newItem,
   addLabel = 'Add',
   emptyLabel = 'Nothing here yet.',
+  hideAddButton = false,
 }: EditableListProps<T>) {
   function updateAt(index: number, next: T) {
     onChange(items.map((item, i) => (i === index ? next : item)));
@@ -55,7 +58,7 @@ export function EditableList<T>({
       {items.map((item, index) => (
         <div
           key={index}
-          className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50 p-4"
+          className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-100 p-4"
         >
           <div className="flex-1">{renderItem(item, (next) => updateAt(index, next), index)}</div>
           <button
@@ -68,10 +71,12 @@ export function EditableList<T>({
           </button>
         </div>
       ))}
-      <Btn type="button" size="sm" variant="secondary" onClick={add}>
-        <Plus size={13} />
-        {addLabel}
-      </Btn>
+      {!hideAddButton && (
+        <Btn type="button" size="sm" variant="secondary" onClick={add}>
+          <Plus size={13} />
+          {addLabel}
+        </Btn>
+      )}
     </div>
   );
 }

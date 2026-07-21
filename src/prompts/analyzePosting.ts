@@ -23,6 +23,21 @@ function truncate(text: string, maxChars: number): string {
   return text.length > maxChars ? text.slice(0, maxChars) + TRUNCATION_MARKER : text;
 }
 
+// Shared by experience/education entries, which both moved from a single
+// free-text start/end string to separate month+year fields plus a
+// `current` flag.
+function formatDateRange(
+  startMonth: string | undefined,
+  startYear: string | undefined,
+  current: boolean,
+  endMonth: string | undefined,
+  endYear: string | undefined,
+): string {
+  const start = [startMonth, startYear].filter(Boolean).join(' ') || 'unknown';
+  const end = current ? 'present' : [endMonth, endYear].filter(Boolean).join(' ') || 'present';
+  return `${start} – ${end}`;
+}
+
 // Renders the profile as compact, quotable plain text rather than JSON: it
 // costs fewer tokens for a small model, and every line becomes something the
 // model can copy verbatim into profileEvidence. Empty sections are omitted.
@@ -37,17 +52,12 @@ export function serializeProfileForPrompt(profile: Profile): string {
   }
 
   if (profile.skills.length > 0) {
-    const lines = profile.skills
-      .filter((group) => group.items.length > 0)
-      .map((group) => `${group.category}: ${group.items.join(', ')}`);
-    if (lines.length > 0) {
-      sections.push(`SKILLS: ${lines.join(' | ')}`);
-    }
+    sections.push(`SKILLS: ${profile.skills.join(', ')}`);
   }
 
   if (profile.experience.length > 0) {
     const lines = profile.experience.map((entry) => {
-      const range = `${entry.start} – ${entry.end?.trim() || 'present'}`;
+      const range = formatDateRange(entry.startMonth, entry.startYear, entry.current, entry.endMonth, entry.endYear);
       const bullets = entry.bullets.map((b) => `  * ${b}`).join('\n');
       return `- ${entry.title}, ${entry.company} (${range})${bullets ? `\n${bullets}` : ''}`;
     });
@@ -64,7 +74,7 @@ export function serializeProfileForPrompt(profile: Profile): string {
 
   if (profile.education.length > 0) {
     const lines = profile.education.map((entry) => {
-      const range = `${entry.start} – ${entry.end?.trim() || 'present'}`;
+      const range = formatDateRange(entry.startMonth, entry.startYear, entry.current, entry.endMonth, entry.endYear);
       const field = entry.field ? ` in ${entry.field}` : '';
       return `- ${entry.degree}${field}, ${entry.school} (${range})`;
     });
