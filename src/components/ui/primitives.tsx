@@ -5,8 +5,9 @@
 // In plain terms: the basic look-and-feel pieces (buttons, cards, form
 // fields) that the rest of the app is built out of.
 
+import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown, Plus, X } from 'lucide-react';
 
 export function Card({
   children,
@@ -296,4 +297,70 @@ export function yearOptions(): string[] {
 export function formatMonthYear(month?: string, year?: string): string {
   if (!year) return month ?? '';
   return month ? `${month} ${year}` : year;
+}
+
+// Flat chip list with an add-one input, e.g. profile skills or a job
+// posting's extracted keywords: type a value, hit Enter or Add, click x to
+// remove a chip.
+export function TagInput({
+  value,
+  onChange,
+  placeholder = 'Add…',
+  emptyLabel = 'Nothing added yet',
+}: {
+  value: string[];
+  onChange: (tags: string[]) => void;
+  placeholder?: string;
+  emptyLabel?: string;
+}) {
+  const [draft, setDraft] = useState('');
+
+  function add() {
+    const tag = draft.trim();
+    if (tag && !value.includes(tag)) {
+      onChange([...value, tag]);
+    }
+    setDraft('');
+  }
+
+  function remove(tag: string) {
+    onChange(value.filter((t) => t !== tag));
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2 min-h-9 mb-4">
+        {value.length === 0 && <p className="text-xs text-slate-300 self-center">{emptyLabel}</p>}
+        {value.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-medium"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => remove(tag)}
+              className="text-slate-400 hover:text-slate-700 transition-colors ml-0.5"
+              aria-label={`Remove ${tag}`}
+            >
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())}
+          placeholder={placeholder}
+          className={`flex-1 ${fieldInputClass}`}
+        />
+        <Btn size="sm" variant="secondary" onClick={add}>
+          <Plus size={13} />
+          Add
+        </Btn>
+      </div>
+    </div>
+  );
 }

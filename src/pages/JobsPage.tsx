@@ -9,14 +9,24 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Circle, Plus } from 'lucide-react';
 import type { JobPosting } from '../types';
-import { listJobPostings, newJobPosting, postingLabel, saveJobPosting } from '../lib/jobStore';
-import { Badge, Btn, Card, FieldInput, FieldTextarea, SectionTitle } from '../components/ui/primitives';
+import { ARRANGEMENTS, listJobPostings, newJobPosting, postingLabel, saveJobPosting } from '../lib/jobStore';
+import {
+  Badge,
+  Btn,
+  Card,
+  FieldInput,
+  FieldSelect,
+  FieldTextarea,
+  SectionTitle,
+} from '../components/ui/primitives';
 
 export default function JobsPage() {
   const navigate = useNavigate();
   const [postings, setPostings] = useState<JobPosting[] | null>(null);
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
+  const [location, setLocation] = useState('');
+  const [arrangement, setArrangement] = useState('');
   const [rawText, setRawText] = useState('');
 
   const refresh = useCallback(() => {
@@ -28,7 +38,12 @@ export default function JobsPage() {
   }, [refresh]);
 
   async function handleSave() {
-    const posting = newJobPosting(rawText, title.trim() || undefined, company.trim() || undefined);
+    const posting = newJobPosting(rawText, {
+      title: title.trim() || undefined,
+      company: company.trim() || undefined,
+      location: location.trim() || undefined,
+      arrangement: arrangement || undefined,
+    });
     await saveJobPosting(posting);
     navigate(`/jobs/${posting.id}`);
   }
@@ -55,6 +70,21 @@ export default function JobsPage() {
               placeholder="Senior Frontend Engineer"
             />
             <FieldInput label="Company" value={company} onChange={setCompany} placeholder="Acme Corp" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FieldInput
+              label="Location"
+              value={location}
+              onChange={setLocation}
+              placeholder="San Francisco, CA"
+            />
+            <FieldSelect
+              label="Arrangement"
+              value={arrangement}
+              onChange={setArrangement}
+              options={ARRANGEMENTS}
+              placeholder="Select…"
+            />
           </div>
           <FieldTextarea
             label="Posting Text"
@@ -84,32 +114,44 @@ export default function JobsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {postings.map((posting) => (
-              <Link key={posting.id} to={`/jobs/${posting.id}`} className="block">
-                <Card className="group p-5 hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.1)] transition-all">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-slate-900 truncate">
-                      {posting.title?.trim() || postingLabel(posting)}
-                    </h3>
-                    {posting.analysis ? (
-                      <Badge color="green">
-                        <CheckCircle size={10} />
-                        Analyzed
-                      </Badge>
-                    ) : (
-                      <Badge color="slate">
-                        <Circle size={10} />
-                        Not analyzed
-                      </Badge>
+            {postings.map((posting) => {
+              const company = posting.company?.trim();
+              const location = posting.location?.trim();
+              const locationArrangement =
+                location && posting.arrangement
+                  ? `${location} (${posting.arrangement})`
+                  : location || posting.arrangement || '';
+
+              return (
+                <Link key={posting.id} to={`/jobs/${posting.id}`} className="block">
+                  <Card className="group p-5 hover:border-slate-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.1)] transition-all">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        {posting.title?.trim() || postingLabel(posting)}
+                      </h3>
+                      {posting.analysis ? (
+                        <Badge color="green">
+                          <CheckCircle size={10} />
+                          Analyzed
+                        </Badge>
+                      ) : (
+                        <Badge color="slate">
+                          <Circle size={10} />
+                          Not analyzed
+                        </Badge>
+                      )}
+                    </div>
+                    {company && <p className="text-sm text-slate-700 mt-0.5">{company}</p>}
+                    {locationArrangement && (
+                      <p className="text-sm text-slate-400 mt-0.5">{locationArrangement}</p>
                     )}
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    {posting.company?.trim() && `${posting.company.trim()} · `}
-                    Saved {new Date(posting.createdAt).toLocaleDateString()}
-                  </p>
-                </Card>
-              </Link>
-            ))}
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Saved {new Date(posting.createdAt).toLocaleDateString()}
+                    </p>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

@@ -10,7 +10,7 @@
 import type { JobAnalysis, RequirementMatch } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
-import { Card, FieldInput, FieldTextarea, SectionTitle } from '../ui/primitives';
+import { Card, FieldInput, FieldTextarea, SectionTitle, TagInput } from '../ui/primitives';
 
 export function AnalysisEditor({
   value,
@@ -43,10 +43,10 @@ export function AnalysisEditor({
 
       <Card className="p-5">
         <SectionTitle>Keywords</SectionTitle>
-        <StringList
-          items={value.keywords}
+        <TagInput
+          value={value.keywords}
           onChange={(keywords) => onChange({ ...value, keywords })}
-          addLabel="Add keyword"
+          placeholder="Add keyword…"
           emptyLabel="No keywords listed."
         />
       </Card>

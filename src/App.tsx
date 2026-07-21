@@ -29,7 +29,7 @@ export default function App() {
               <FileText size={14} className="text-white" />
             </div>
             <span className="text-sm font-semibold text-slate-900 tracking-tight">
-              Job Application Assistant
+              Pimp My Resume
             </span>
             <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200">
               <Shield size={10} className="text-slate-400" />

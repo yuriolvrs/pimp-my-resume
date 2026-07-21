@@ -95,6 +95,9 @@ export interface JobPosting {
   createdAt: number;
   title?: string;
   company?: string;
+  location?: string;
+  /** Work arrangement, e.g. "Onsite" | "Hybrid" | "Remote" -- see ARRANGEMENTS in jobStore.ts. */
+  arrangement?: string;
   rawText: string;
   analysis?: JobAnalysis;
 }

@@ -150,3 +150,46 @@ export function isJobAnalysis(x: unknown): x is JobAnalysis {
     candidate.matches.every(isRequirementMatch)
   );
 }
+
+function normalizeForComparison(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// isJobAnalysis only checks shape (arrays of strings); this checks substance
+// and repairs what it can, rather than trusting a small model's self-report.
+// Enforced here, against real, observed model behavior:
+// - profileEvidence is only trusted if it's an actual (normalized) substring
+//   of the profile text sent to the model -- llama-3.1-8b-instant has been
+//   observed simply echoing the requirement back as its own "evidence".
+// - a match whose evidence doesn't survive that check is dropped, and its
+//   requirement is treated as a gap instead of a fabricated match.
+// - gaps is rebuilt from requirements minus whatever ended up genuinely
+//   matched, rather than trusting the model's own gaps list -- observed to
+//   sometimes include requirements it never listed in `requirements` at all.
+// - blank requirements/keywords/matches are dropped.
+export function sanitizeJobAnalysis(analysis: JobAnalysis, profile: Profile): JobAnalysis {
+  const profileText = normalizeForComparison(serializeProfileForPrompt(profile));
+
+  const requirements = analysis.requirements.map((r) => r.trim()).filter((r) => r !== '');
+  const requirementSet = new Set(requirements);
+
+  const matches = analysis.matches
+    .map((m) => ({
+      requirement: m.requirement.trim(),
+      profileEvidence: m.profileEvidence
+        .map((e) => e.trim())
+        .filter((e) => e !== '' && profileText.includes(normalizeForComparison(e))),
+    }))
+    .filter((m) => requirementSet.has(m.requirement) && m.profileEvidence.length > 0);
+
+  const matchedRequirements = new Set(matches.map((m) => m.requirement));
+  const gaps = requirements.filter((r) => !matchedRequirements.has(r));
+
+  return {
+    roleSummary: analysis.roleSummary,
+    requirements,
+    keywords: analysis.keywords.map((k) => k.trim()).filter((k) => k !== ''),
+    matches,
+    gaps,
+  };
+}

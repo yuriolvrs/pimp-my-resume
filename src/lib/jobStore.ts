@@ -10,13 +10,21 @@ import type { JobPosting } from '../types';
 
 const LABEL_MAX_CHARS = 80;
 
+/** Work arrangement options offered in the Jobs page's Arrangement dropdown. */
+export const ARRANGEMENTS = ['Onsite', 'Hybrid', 'Remote'] as const;
+
 /** Builds a new, unsaved posting from pasted text. Caller must saveJobPosting it. */
-export function newJobPosting(rawText: string, title?: string, company?: string): JobPosting {
+export function newJobPosting(
+  rawText: string,
+  details?: { title?: string; company?: string; location?: string; arrangement?: string },
+): JobPosting {
   return {
     id: crypto.randomUUID(),
     createdAt: Date.now(),
-    title,
-    company,
+    title: details?.title,
+    company: details?.company,
+    location: details?.location,
+    arrangement: details?.arrangement,
     rawText,
   };
 }

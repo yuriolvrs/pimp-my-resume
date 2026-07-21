@@ -11,6 +11,7 @@ import {
   MAX_POSTING_CHARS,
   buildAnalyzePostingPrompt,
   isJobAnalysis,
+  sanitizeJobAnalysis,
   serializeProfileForPrompt,
 } from './analyzePosting';
 import type { JobAnalysis, Profile } from '../types';
@@ -155,5 +156,83 @@ describe('buildAnalyzePostingPrompt', () => {
     };
     const prompt = buildAnalyzePostingPrompt(hugePosting, hugeProfile);
     expect(new TextEncoder().encode(prompt).length).toBeLessThan(60_000);
+  });
+});
+
+describe('sanitizeJobAnalysis', () => {
+  it('drops a match whose evidence is fabricated (not present in the profile) and gaps its requirement', () => {
+    const profile: Profile = { ...emptyProfile(), summary: 'Aspiring software engineer' };
+    const analysis: JobAnalysis = {
+      roleSummary: 'A backend role.',
+      requirements: ['3+ years of Java experience'],
+      keywords: ['Java'],
+      matches: [
+        // The model echoed the requirement back as its own "evidence" --
+        // this exact failure mode was observed live against llama-3.1-8b-instant.
+        { requirement: '3+ years of Java experience', profileEvidence: ['3+ years of Java experience'] },
+      ],
+      gaps: [],
+    };
+    const result = sanitizeJobAnalysis(analysis, profile);
+    expect(result.matches).toEqual([]);
+    expect(result.gaps).toEqual(['3+ years of Java experience']);
+  });
+
+  it('keeps a match whose evidence genuinely appears in the profile (case/whitespace-insensitive)', () => {
+    const profile: Profile = {
+      ...emptyProfile(),
+      experience: [
+        {
+          company: 'Acme',
+          title: 'Engineer',
+          current: false,
+          bullets: ['Led   the REACT rewrite'],
+        },
+      ],
+    };
+    const analysis: JobAnalysis = {
+      roleSummary: 'A frontend role.',
+      requirements: ['5+ years React'],
+      keywords: ['React'],
+      matches: [{ requirement: '5+ years React', profileEvidence: ['led the react rewrite'] }],
+      gaps: [],
+    };
+    const result = sanitizeJobAnalysis(analysis, profile);
+    expect(result.matches).toEqual([
+      { requirement: '5+ years React', profileEvidence: ['led the react rewrite'] },
+    ]);
+    expect(result.gaps).toEqual([]);
+  });
+
+  it('rebuilds gaps from requirements instead of trusting the model\'s own gaps list', () => {
+    const profile: Profile = emptyProfile();
+    const analysis: JobAnalysis = {
+      roleSummary: 'A role.',
+      requirements: ['Requirement A'],
+      keywords: [],
+      matches: [],
+      // The model listed a "gap" that was never in requirements at all --
+      // observed live: it re-scanned the posting instead of partitioning
+      // the requirements array.
+      gaps: ['Requirement A', 'Some other line never listed as a requirement'],
+    };
+    const result = sanitizeJobAnalysis(analysis, profile);
+    expect(result.gaps).toEqual(['Requirement A']);
+  });
+
+  it('drops blank requirements, keywords, and junk empty matches', () => {
+    const profile: Profile = emptyProfile();
+    const analysis: JobAnalysis = {
+      roleSummary: 'A role.',
+      requirements: ['Requirement A', '  '],
+      keywords: ['Java', '', '  '],
+      matches: [{ requirement: '', profileEvidence: [] }],
+      gaps: [],
+    };
+    const result = sanitizeJobAnalysis(analysis, profile);
+    expect(result.requirements).toEqual(['Requirement A']);
+    expect(result.keywords).toEqual(['Java']);
+    expect(result.matches).toEqual([]);
+    expect(result.gaps).toEqual(['Requirement A']);
   });
 });
