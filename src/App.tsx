@@ -8,6 +8,7 @@ import { Briefcase, FileText, Shield, User } from 'lucide-react';
 import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
 import JobDetailPage from './pages/JobDetailPage.tsx';
+import MatchingReviewPage from './pages/MatchingReviewPage.tsx';
 import AboutPage from './pages/AboutPage.tsx';
 import DevLlmPage from './pages/DevLlmPage.tsx';
 
@@ -18,7 +19,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   ].join(' ');
 
 export default function App() {
-  const onJobDetail = useMatch('/jobs/:id');
+  const onJobDetail = useMatch('/jobs/:id/*');
 
   return (
     <div className="min-h-screen bg-[#f5f6f8] text-slate-900">
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
+          <Route path="/jobs/:id/match" element={<MatchingReviewPage />} />
           <Route path="/about" element={<AboutPage />} />
           {/* Unlinked dev-only route for Phase 2's proxy test harness. */}
           <Route path="/dev/llm" element={<DevLlmPage />} />

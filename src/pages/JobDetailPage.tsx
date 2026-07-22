@@ -20,12 +20,13 @@ import {
 import { hasProfileContent, loadProfile } from '../lib/profileStore';
 import {
   buildAnalyzePostingPrompt,
-  isJobAnalysis,
+  isExtractedAnalysis,
   MAX_POSTING_CHARS,
-  sanitizeJobAnalysis,
+  toJobAnalysis,
 } from '../prompts/analyzePosting';
-import { generateStructured } from '../lib/llm';
-import { JsonParseError } from '../lib/json';
+import { buildProfileAtoms } from '../lib/profileAtoms';
+import { runMatching } from '../lib/matching/runMatching';
+import { generateStructured, llmErrorMessage } from '../lib/llm';
 import { AnalysisEditor } from '../components/jobs/AnalysisEditor';
 import { Btn, Card, FieldInput, FieldSelect } from '../components/ui/primitives';
 
@@ -49,7 +50,9 @@ export default function JobDetailPage() {
     refresh();
   }, [refresh]);
 
-  // Merges a change into state and persists immediately (matches/keywords/etc).
+  // Merges a change into state and persists immediately -- used for
+  // list-shaped edits (analysis, arrangement) and, on blur, to commit the
+  // free-text fields updated live below.
   function update(patch: Partial<JobPosting>) {
     setPosting((prev) => {
       if (!prev || prev === 'missing') return prev;
@@ -59,19 +62,11 @@ export default function JobDetailPage() {
     });
   }
 
-  // For the posting text: update on-screen state on every keystroke, but
-  // only persist to Dexie on blur, to avoid a write per character typed.
+  // For free text (title/company/location/posting body): update on-screen
+  // state on every keystroke, but only persist to Dexie on blur, to avoid a
+  // write per character typed.
   function updateLive(patch: Partial<JobPosting>) {
     setPosting((prev) => (prev && prev !== 'missing' ? { ...prev, ...patch } : prev));
-  }
-
-  function commit(patch: Partial<JobPosting>) {
-    setPosting((prev) => {
-      if (!prev || prev === 'missing') return prev;
-      const next = { ...prev, ...patch };
-      void saveJobPosting(next);
-      return next;
-    });
   }
 
   async function handleAnalyze() {
@@ -79,25 +74,47 @@ export default function JobDetailPage() {
     setError(null);
     setStatus('loading');
     try {
-      const prompt = buildAnalyzePostingPrompt(posting.rawText, profile);
-      const rawAnalysis = await generateStructured(prompt, isJobAnalysis, {
+      const prompt = buildAnalyzePostingPrompt(posting.rawText);
+      const extracted = await generateStructured(prompt, isExtractedAnalysis, {
         temperature: 0.2,
         maxTokens: 1500,
       });
-      update({ analysis: sanitizeJobAnalysis(rawAnalysis, profile) });
+      update({ analysis: toJobAnalysis(extracted) });
       setStatus('idle');
     } catch (err) {
-      if (err instanceof JsonParseError) {
-        setError(
-          'The model returned an unusable response. Try again — the model this app uses is small and occasionally produces malformed output.',
-        );
-      } else if (err instanceof Error) {
-        setError(`Analysis failed: ${err.message}`);
-      } else {
-        setError('Unknown error.');
-      }
+      setError(llmErrorMessage(err, 'Analysis'));
       setStatus('error');
     }
+  }
+
+  async function handleConfirmMatching() {
+    if (!posting || posting === 'missing' || !posting.analysis || !profile) return;
+    setError(null);
+    setStatus('loading');
+    try {
+      const atoms = buildProfileAtoms(profile);
+      const matches = await runMatching(posting.analysis.requirements, atoms);
+      const analysis = { ...posting.analysis, matches };
+      const next = { ...posting, analysis };
+      // Await the write (rather than the fire-and-forget update() used for
+      // autosave elsewhere) -- we navigate immediately after, and the next
+      // page reads this posting fresh from Dexie, so the write must land first.
+      await saveJobPosting(next);
+      setPosting(next);
+      setStatus('idle');
+      navigate(`/jobs/${posting.id}/match`);
+    } catch (err) {
+      setError(llmErrorMessage(err, 'Matching'));
+      setStatus('error');
+    }
+  }
+
+  // Matching already ran and its results (plus any manual reject/swap/add-
+  // evidence edits) are persisted -- just navigate, don't recompute. Re-
+  // running is an explicit action available on the Matching screen itself.
+  function goToMatching() {
+    if (!posting || posting === 'missing') return;
+    navigate(`/jobs/${posting.id}/match`);
   }
 
   async function handleConfirmDelete() {
@@ -162,14 +179,14 @@ export default function JobDetailPage() {
             label="Job Title"
             value={posting.title ?? ''}
             onChange={(title) => updateLive({ title })}
-            onBlur={() => commit({ title: posting.title })}
+            onBlur={() => update({ title: posting.title })}
             placeholder="Senior Frontend Engineer"
           />
           <FieldInput
             label="Company"
             value={posting.company ?? ''}
             onChange={(company) => updateLive({ company })}
-            onBlur={() => commit({ company: posting.company })}
+            onBlur={() => update({ company: posting.company })}
             placeholder="Acme Corp"
           />
         </div>
@@ -178,7 +195,7 @@ export default function JobDetailPage() {
             label="Location"
             value={posting.location ?? ''}
             onChange={(location) => updateLive({ location })}
-            onBlur={() => commit({ location: posting.location })}
+            onBlur={() => update({ location: posting.location })}
             placeholder="San Francisco, CA"
           />
           <FieldSelect
@@ -191,93 +208,110 @@ export default function JobDetailPage() {
         </div>
       </Card>
 
-      <Card className="p-5">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-4">
-          Posting Text
-        </p>
-        <textarea
-          className="w-full text-sm text-slate-600 leading-relaxed bg-transparent resize-none outline-none border border-transparent rounded-xl focus:border-blue-300 focus:bg-blue-50/20 px-2 py-2 transition-all max-h-[70vh] overflow-y-auto"
-          rows={16}
-          value={posting.rawText}
-          onChange={(e) => updateLive({ rawText: e.target.value })}
-          onBlur={() => commit({ rawText: posting.rawText })}
-        />
-        {posting.rawText.length > MAX_POSTING_CHARS && (
-          <p className="text-xs text-slate-400 mt-2">
-            Only the first {MAX_POSTING_CHARS.toLocaleString()} characters are sent for analysis.
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-5 items-start">
+        <Card className="p-5 lg:sticky lg:top-[70px] lg:h-[calc(100vh-88px)] flex flex-col">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-4 shrink-0">
+            Posting Text
           </p>
-        )}
-      </Card>
+          <textarea
+            className="w-full flex-1 min-h-[16rem] text-sm text-slate-600 leading-relaxed bg-transparent resize-none outline-none border border-transparent rounded-xl focus:border-blue-300 focus:bg-blue-50/20 px-2 py-2 transition-all overflow-y-auto"
+            value={posting.rawText}
+            onChange={(e) => updateLive({ rawText: e.target.value })}
+            onBlur={() => update({ rawText: posting.rawText })}
+          />
+          {posting.rawText.length > MAX_POSTING_CHARS && (
+            <p className="text-xs text-slate-400 mt-2 shrink-0">
+              Only the first {MAX_POSTING_CHARS.toLocaleString()} characters are sent for analysis.
+            </p>
+          )}
+        </Card>
 
-      <div className="flex items-center gap-3 my-8">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
-          AI-Extracted Analysis
-        </span>
-        <div className="h-px flex-1 bg-slate-200" />
-      </div>
+        <div className="space-y-4">
+          {!hasProfileContent(profile) && (
+            <p className="text-sm text-slate-500">
+              Add your experience or skills on the{' '}
+              <Link to="/profile" className="underline hover:text-slate-900">
+                Profile page
+              </Link>{' '}
+              first — matches and gaps need something to compare against.
+            </p>
+          )}
 
-      <div className="space-y-4">
-        {!hasProfileContent(profile) && (
-          <p className="text-sm text-slate-500">
-            Add your experience or skills on the{' '}
-            <Link to="/profile" className="underline hover:text-slate-900">
-              Profile page
-            </Link>{' '}
-            first — matches and gaps need something to compare against.
-          </p>
-        )}
-
-        {!posting.analysis ? (
-          <Card className="p-10 flex flex-col items-center text-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg">
-              <Sparkles size={22} className="text-white" />
-            </div>
-            <div className="space-y-1.5">
-              <h3 className="text-base font-semibold text-slate-900">Analyze this posting</h3>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
-                Extract requirements, find keyword matches, identify gaps — then edit anything
-                before generating documents.
-              </p>
-            </div>
-            <Btn
-              onClick={handleAnalyze}
-              disabled={
-                status === 'loading' || posting.rawText.trim() === '' || !hasProfileContent(profile)
-              }
-              className="min-w-[140px] justify-center"
-            >
-              {status === 'loading' ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing…
-                </>
-              ) : (
-                <>
-                  <Sparkles size={14} />
-                  Run Analysis
-                </>
-              )}
-            </Btn>
-            {error && <p className="text-xs text-red-600">{error}</p>}
-          </Card>
-        ) : (
-          <>
-            <div className="flex justify-end">
+          {!posting.analysis ? (
+            <Card className="p-10 flex flex-col items-center text-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg">
+                <Sparkles size={22} className="text-white" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-base font-semibold text-slate-900">Analyze this posting</h3>
+                <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
+                  Extract requirements, find keyword matches, identify gaps — then edit anything
+                  before generating documents.
+                </p>
+              </div>
               <Btn
-                size="sm"
-                variant="secondary"
                 onClick={handleAnalyze}
-                disabled={status === 'loading' || !hasProfileContent(profile)}
+                disabled={
+                  status === 'loading' || posting.rawText.trim() === '' || !hasProfileContent(profile)
+                }
+                className="min-w-[140px] justify-center"
               >
-                <Sparkles size={13} />
-                {status === 'loading' ? 'Analyzing…' : 'Re-analyze'}
+                {status === 'loading' ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    Run Analysis
+                  </>
+                )}
               </Btn>
-            </div>
-            {error && <p className="text-xs text-red-600">{error}</p>}
-            <AnalysisEditor value={posting.analysis} onChange={(analysis) => update({ analysis })} />
-          </>
-        )}
+              {error && <p className="text-xs text-red-600">{error}</p>}
+            </Card>
+          ) : (
+            <Card className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+                  Analysis
+                </p>
+                <div className="flex items-center gap-2">
+                  <Btn
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleAnalyze}
+                    disabled={status === 'loading' || !hasProfileContent(profile)}
+                    ariaLabel="Re-analyze"
+                  >
+                    {status === 'loading' ? (
+                      <div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles size={13} />
+                    )}
+                  </Btn>
+                  <Btn
+                    size="sm"
+                    onClick={posting.analysis.matches.length > 0 ? goToMatching : handleConfirmMatching}
+                    disabled={
+                      status === 'loading' ||
+                      !hasProfileContent(profile) ||
+                      posting.analysis.requirements.length === 0
+                    }
+                  >
+                    {status === 'loading'
+                      ? 'Matching…'
+                      : posting.analysis.matches.length > 0
+                        ? 'View matches'
+                        : 'Confirm & run matching'}
+                  </Btn>
+                </div>
+              </div>
+              {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+              <AnalysisEditor value={posting.analysis} onChange={(analysis) => update({ analysis })} />
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ function sampleData(): BackupData {
         projects: [],
         education: [],
         writingSamples: [],
+        additionalInfo: [],
       },
     ],
     jobPostings: [],

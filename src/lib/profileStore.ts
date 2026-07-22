@@ -19,6 +19,7 @@ export function emptyProfile(): Profile {
     projects: [],
     education: [],
     writingSamples: [],
+    additionalInfo: [],
   };
 }
 
@@ -36,7 +37,11 @@ function normalizeSkills(skills: unknown): string[] {
 export async function loadProfile(): Promise<Profile> {
   const existing = await db.profiles.get(DEFAULT_PROFILE_ID);
   if (!existing) return emptyProfile();
-  return { ...existing, skills: normalizeSkills(existing.skills) };
+  return {
+    ...existing,
+    skills: normalizeSkills(existing.skills),
+    additionalInfo: Array.isArray(existing.additionalInfo) ? existing.additionalInfo : [],
+  };
 }
 
 export async function saveProfile(profile: Profile): Promise<void> {

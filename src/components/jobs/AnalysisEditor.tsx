@@ -1,16 +1,70 @@
-// What this file is: the editable form for a job posting's analysis --
-// role summary, requirements, keywords, matches (each with profile
-// evidence), and gaps. Built entirely from the existing EditableList/
-// StringList primitives, the same way the profile section forms are, so a
-// bad or incomplete LLM extraction can be corrected by hand.
+// What this file is: the editable form for a job posting's extracted
+// analysis -- role summary, requirements (grouped Required/Preferred), and
+// keywords. Matching (which profile evidence supports each requirement)
+// happens on the separate Matching review screen, not here. Built on the
+// existing EditableList/StringList primitives, same as the profile forms.
 // In plain terms: the form where you review and fix up the AI's read on a
-// job posting -- what it requires, what you already have, and what's
-// missing.
+// job posting -- the role, what it requires, and the key terms -- before
+// running matching against your profile.
 
-import type { JobAnalysis, RequirementMatch } from '../../types';
+import type { JobAnalysis, Requirement, RequirementSeverity } from '../../types';
 import { EditableList } from '../EditableList';
-import { StringList } from '../StringList';
-import { Card, FieldInput, FieldTextarea, SectionTitle, TagInput } from '../ui/primitives';
+import { Card, FieldSelect, FieldTextarea, SectionTitle, TagInput } from '../ui/primitives';
+
+function nextOrder(requirements: Requirement[]): number {
+  return requirements.length === 0 ? 0 : Math.max(...requirements.map((r) => r.order)) + 1;
+}
+
+function mergeSeverityGroup(
+  all: Requirement[],
+  severity: RequirementSeverity,
+  updatedGroup: Requirement[],
+): Requirement[] {
+  const others = all.filter((r) => r.severity !== severity);
+  return [...others, ...updatedGroup].sort((a, b) => a.order - b.order);
+}
+
+function RequirementGroup({
+  title,
+  severity,
+  requirements,
+  onChange,
+}: {
+  title: string;
+  severity: RequirementSeverity;
+  requirements: Requirement[];
+  onChange: (requirements: Requirement[]) => void;
+}) {
+  const group = requirements.filter((r) => r.severity === severity);
+
+  return (
+    <Card className="p-5">
+      <SectionTitle>{title}</SectionTitle>
+      <EditableList<Requirement>
+        items={group}
+        onChange={(updatedGroup) => onChange(mergeSeverityGroup(requirements, severity, updatedGroup))}
+        newItem={() => ({ id: crypto.randomUUID(), text: '', severity, order: nextOrder(requirements) })}
+        addLabel={`Add ${severity} requirement`}
+        emptyLabel={`No ${severity} requirements listed.`}
+        renderItem={(requirement, update) => (
+          <div className="space-y-2">
+            <FieldTextarea
+              value={requirement.text}
+              onChange={(text) => update({ ...requirement, text })}
+              rows={2}
+            />
+            <FieldSelect
+              label="Severity"
+              value={requirement.severity}
+              onChange={(value) => update({ ...requirement, severity: value as RequirementSeverity })}
+              options={['required', 'preferred']}
+            />
+          </div>
+        )}
+      />
+    </Card>
+  );
+}
 
 export function AnalysisEditor({
   value,
@@ -26,20 +80,23 @@ export function AnalysisEditor({
         <FieldTextarea
           value={value.roleSummary}
           onChange={(roleSummary) => onChange({ ...value, roleSummary })}
-          rows={2}
+          rows={4}
         />
       </Card>
 
-      <Card className="p-5">
-        <SectionTitle>Requirements</SectionTitle>
-        <StringList
-          items={value.requirements}
-          onChange={(requirements) => onChange({ ...value, requirements })}
-          multiline
-          addLabel="Add requirement"
-          emptyLabel="No requirements listed."
-        />
-      </Card>
+      <RequirementGroup
+        title="Required"
+        severity="required"
+        requirements={value.requirements}
+        onChange={(requirements) => onChange({ ...value, requirements })}
+      />
+
+      <RequirementGroup
+        title="Preferred"
+        severity="preferred"
+        requirements={value.requirements}
+        onChange={(requirements) => onChange({ ...value, requirements })}
+      />
 
       <Card className="p-5">
         <SectionTitle>Keywords</SectionTitle>
@@ -48,51 +105,6 @@ export function AnalysisEditor({
           onChange={(keywords) => onChange({ ...value, keywords })}
           placeholder="Add keyword…"
           emptyLabel="No keywords listed."
-        />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle sub="Your profile evidence for each requirement">Matches</SectionTitle>
-        <EditableList<RequirementMatch>
-          items={value.matches}
-          onChange={(matches) => onChange({ ...value, matches })}
-          newItem={() => ({ requirement: '', profileEvidence: [] })}
-          addLabel="Add match"
-          emptyLabel="No matches yet."
-          renderItem={(match, update) => (
-            <div className="space-y-2">
-              <FieldInput
-                placeholder="Requirement"
-                value={match.requirement}
-                onChange={(requirement) => update({ ...match, requirement })}
-              />
-              <div>
-                <span className="mb-1 block text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
-                  Profile evidence
-                </span>
-                <StringList
-                  items={match.profileEvidence}
-                  onChange={(profileEvidence) => update({ ...match, profileEvidence })}
-                  multiline
-                  addLabel="Add evidence"
-                  emptyLabel="No evidence yet."
-                />
-              </div>
-            </div>
-          )}
-        />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle sub="Requirements the posting needs that aren't evidenced in your profile">
-          Gaps
-        </SectionTitle>
-        <StringList
-          items={value.gaps}
-          onChange={(gaps) => onChange({ ...value, gaps })}
-          multiline
-          addLabel="Add gap"
-          emptyLabel="No gaps listed."
         />
       </Card>
     </div>

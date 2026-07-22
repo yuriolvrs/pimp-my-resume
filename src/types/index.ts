@@ -8,7 +8,7 @@
 // "job posting," and a "generated resume" look like as data.
 
 /** Bump when the persisted shape changes; used for export/import migrations. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Profile
@@ -71,23 +71,60 @@ export interface Profile {
   education: EducationEntry[];
   /** Free-text samples used for cover-letter style mimicry. */
   writingSamples: string[];
+  /**
+   * Resume-worthy accomplishments not tied to any specific experience/project
+   * entry -- entered from the job-matching screen, but stored on the profile
+   * so they're available as evidence in every future matching pass.
+   */
+  additionalInfo: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Profile atoms (indexed profile content for matching)
+// ---------------------------------------------------------------------------
+
+/** One discrete, quotable unit of profile content -- a skill, a bullet, etc. */
+export interface ProfileAtom {
+  /** Content-derived; stable across re-derivation as long as the text is unchanged. */
+  id: string;
+  source: 'skills' | 'experience' | 'projects' | 'education' | 'additional';
+  /** e.g. "Experience: Software Engineering Intern, Acme Co" */
+  sourceLabel: string;
+  /** Verbatim text from the profile. */
+  text: string;
 }
 
 // ---------------------------------------------------------------------------
 // Job posting + analysis
 // ---------------------------------------------------------------------------
 
+export type RequirementSeverity = 'required' | 'preferred';
+
+export interface Requirement {
+  id: string;
+  text: string;
+  severity: RequirementSeverity;
+  /** Position as it appeared in the posting text; used for display sort. */
+  order: number;
+}
+
+export type MatchStatus = 'full' | 'partial' | 'gap_no_candidates' | 'gap_unverified';
+
 export interface RequirementMatch {
-  requirement: string;
-  profileEvidence: string[];
+  requirementId: string;
+  status: MatchStatus;
+  /** References into ProfileAtom -- never free text. */
+  atomIds: string[];
+  /** Optional short LLM rationale, e.g. why it's partial. */
+  note?: string;
 }
 
 export interface JobAnalysis {
   roleSummary: string;
-  requirements: string[];
+  requirements: Requirement[];
   keywords: string[];
+  /** One entry per requirement, always present. */
   matches: RequirementMatch[];
-  gaps: string[];
 }
 
 export interface JobPosting {

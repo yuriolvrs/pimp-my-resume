@@ -5,7 +5,7 @@
 // In plain terms: the basic look-and-feel pieces (buttons, cards, form
 // fields) that the rest of the app is built out of.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronDown, Plus, X } from 'lucide-react';
 
@@ -95,6 +95,53 @@ export function Collapsible({ open, children }: { open: boolean; children: React
   );
 }
 
+// A centered modal dialog with a dimmed backdrop that closes it on click --
+// used where a picker/form needs more room than an inline card section (e.g.
+// the Matching review screen's "Add evidence" picker). Callers structure
+// header/scrollable body/footer themselves via children; this only owns the
+// overlay chrome and a plain CSS fade/scale-in transition (no animation
+// library).
+export function Modal({
+  open,
+  onClose,
+  children,
+  className = '',
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setVisible(false);
+      return;
+    }
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-150 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        onClick={onClose}
+      />
+      <div
+        className={`relative bg-white rounded-2xl shadow-2xl w-full flex flex-col transition-all duration-150 ${
+          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        } ${className}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 const buttonVariants = {
   primary: 'bg-slate-900 text-white hover:bg-slate-700 focus:ring-slate-900/30 shadow-sm',
   secondary: 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 focus:ring-slate-400/20',
@@ -115,6 +162,7 @@ export function Btn({
   size = 'md',
   className = '',
   disabled = false,
+  ariaLabel,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -123,12 +171,14 @@ export function Btn({
   size?: keyof typeof buttonSizes;
   className?: string;
   disabled?: boolean;
+  ariaLabel?: string;
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
       className={`inline-flex items-center gap-1.5 rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap ${buttonSizes[size]} ${buttonVariants[variant]} ${className}`}
     >
       {children}
@@ -161,7 +211,7 @@ export function Badge({
 }
 
 export const fieldInputClass =
-  'px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400/25 focus:border-blue-400 transition-all';
+  'px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400/25 focus:border-blue-400 transition-all';
 
 export const fieldLabelClass = 'text-[11px] font-semibold text-slate-400 uppercase tracking-widest';
 

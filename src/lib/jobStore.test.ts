@@ -23,7 +23,6 @@ describe('postingLabel', () => {
         requirements: [],
         keywords: [],
         matches: [],
-        gaps: [],
       },
     });
     expect(postingLabel(p)).toBe('Staff Engineer');
@@ -37,7 +36,6 @@ describe('postingLabel', () => {
         requirements: [],
         keywords: [],
         matches: [],
-        gaps: [],
       },
     });
     expect(postingLabel(p)).toBe('Senior Frontend Engineer');

@@ -5,7 +5,7 @@
 // key -- that lives only in the Worker.
 // In plain terms: the app's one doorway to asking the AI something.
 
-import { parseJson } from './json';
+import { JsonParseError, parseJson } from './json';
 
 export interface GenerateOptions {
   temperature?: number;
@@ -43,6 +43,17 @@ export async function generate(prompt: string, options: GenerateOptions = {}): P
     throw new Error('LLM proxy response had no content.');
   }
   return content;
+}
+
+// Every screen that runs an LLM call needs the same three-way message
+// (malformed JSON / failed request / something else); `label` names the
+// action, e.g. "Analysis" or "Matching".
+export function llmErrorMessage(err: unknown, label: string): string {
+  if (err instanceof JsonParseError) {
+    return `${label} failed: the model returned an unusable response. Try again — the model this app uses is small and occasionally produces malformed output.`;
+  }
+  if (err instanceof Error) return `${label} failed: ${err.message}`;
+  return `${label} failed: unknown error.`;
 }
 
 export async function generateStructured<T>(
