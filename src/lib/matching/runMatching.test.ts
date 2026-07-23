@@ -38,7 +38,7 @@ describe('runMatching', () => {
 
     const result = await runMatching([req], atoms);
 
-    expect(result).toEqual([{ requirementId: 'r1', status: 'full', atomIds: ['java'], note: undefined }]);
+    expect(result).toEqual([{ requirementId: 'r1', status: 'full', atomIds: ['java'] }]);
   });
 
   it('marks gap_unverified when candidates exist but the LLM confirms none of them', async () => {

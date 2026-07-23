@@ -22,27 +22,54 @@ interface ChatCompletionResponse {
   choices?: { message?: { content?: string } }[];
 }
 
+// Matching/analysis can fire a burst of calls (one per requirement) that
+// trips a rate limit -- either the Worker's own per-IP limiter, or the LLM
+// provider's tokens-per-minute cap. Back off and retry rather than failing
+// the whole pass on a transient 429.
+const RATE_LIMIT_MAX_RETRIES = 4;
+const RATE_LIMIT_FALLBACK_DELAYS_MS = [2000, 5000, 10000, 15000];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// The provider's 429 body says exactly how long to wait (e.g. "Please try
+// again in 4.31s"); honoring that is far more reliable than guessing with a
+// fixed schedule, since a too-short wait just re-hits the same cap.
+function retryDelayMs(body: string, attempt: number): number {
+  const match = body.match(/try again in ([\d.]+)s/i);
+  if (match) return Math.ceil(parseFloat(match[1]) * 1000) + 500;
+  return RATE_LIMIT_FALLBACK_DELAYS_MS[attempt] ?? RATE_LIMIT_FALLBACK_DELAYS_MS.at(-1)!;
+}
+
 export async function generate(prompt: string, options: GenerateOptions = {}): Promise<string> {
-  const response = await fetch(`${proxyUrl()}/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      messages: [{ role: 'user', content: prompt }],
-      temperature: options.temperature,
-      max_tokens: options.maxTokens,
-    }),
-  });
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(`${proxyUrl()}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`LLM proxy request failed: ${response.status} ${await response.text()}`);
-  }
+    if (response.status === 429 && attempt < RATE_LIMIT_MAX_RETRIES) {
+      await sleep(retryDelayMs(await response.text(), attempt));
+      continue;
+    }
 
-  const data = (await response.json()) as ChatCompletionResponse;
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error('LLM proxy response had no content.');
+    if (!response.ok) {
+      throw new Error(`LLM proxy request failed: ${response.status} ${await response.text()}`);
+    }
+
+    const data = (await response.json()) as ChatCompletionResponse;
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('LLM proxy response had no content.');
+    }
+    return content;
   }
-  return content;
 }
 
 // Every screen that runs an LLM call needs the same three-way message

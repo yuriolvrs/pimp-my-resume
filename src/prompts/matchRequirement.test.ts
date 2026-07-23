@@ -20,12 +20,12 @@ describe('buildMatchRequirementPrompt', () => {
 });
 
 describe('isMatchVerification', () => {
-  it('accepts a full match with no note', () => {
+  it('accepts a full match', () => {
     expect(isMatchVerification({ atomIds: ['a'], status: 'full' })).toBe(true);
   });
 
-  it('accepts a partial match with a note', () => {
-    expect(isMatchVerification({ atomIds: ['a'], status: 'partial', note: 'internship, not full-time' })).toBe(true);
+  it('accepts a partial match', () => {
+    expect(isMatchVerification({ atomIds: ['a'], status: 'partial' })).toBe(true);
   });
 
   it('accepts an empty atomIds array', () => {

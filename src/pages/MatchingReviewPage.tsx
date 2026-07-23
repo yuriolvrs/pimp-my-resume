@@ -20,7 +20,7 @@ import { buildProfileAtoms } from '../lib/profileAtoms';
 import { runMatching, statusAfterReject } from '../lib/matching/runMatching';
 import { llmErrorMessage } from '../lib/llm';
 import { EvidenceModal } from '../components/jobs/EvidenceModal';
-import { Badge, Btn, Card, SectionTitle } from '../components/ui/primitives';
+import { Badge, Btn, Card, ProgressBar, SectionTitle } from '../components/ui/primitives';
 
 const SOURCE_BADGE_LABEL: Record<ProfileAtom['source'], string> = {
   skills: 'Skills',
@@ -56,8 +56,10 @@ export default function MatchingReviewPage() {
   const [additionalInfoModalOpen, setAdditionalInfoModalOpen] = useState(false);
   const [evidenceModalOpen, setEvidenceModalOpen] = useState(false);
   const [confirmingRematch, setConfirmingRematch] = useState(false);
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const [rematchStatus, setRematchStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [rematchError, setRematchError] = useState<string | null>(null);
+  const [rematchProgress, setRematchProgress] = useState<{ done: number; total: number } | null>(null);
   const [expandedAtomIds, setExpandedAtomIds] = useState<Set<string>>(new Set());
 
   const refresh = useCallback(() => {
@@ -145,9 +147,12 @@ export default function MatchingReviewPage() {
     if (!posting || posting === 'missing' || !posting.analysis || !profile) return;
     setRematchError(null);
     setRematchStatus('loading');
+    setRematchProgress({ done: 0, total: posting.analysis.requirements.length });
     try {
       const freshAtoms = buildProfileAtoms(profile);
-      const matches = await runMatching(posting.analysis.requirements, freshAtoms);
+      const matches = await runMatching(posting.analysis.requirements, freshAtoms, (done, total) =>
+        setRematchProgress({ done, total }),
+      );
       const next = { ...posting, analysis: { ...posting.analysis, matches } };
       await saveJobPosting(next);
       setPosting(next);
@@ -156,7 +161,19 @@ export default function MatchingReviewPage() {
     } catch (err) {
       setRematchError(llmErrorMessage(err, 'Re-matching'));
       setRematchStatus('error');
+    } finally {
+      setRematchProgress(null);
     }
+  }
+
+  // Wipes every requirement back to an unmatched gap -- no LLM call, just a
+  // clean slate for manually attaching evidence via "Add evidence" instead.
+  async function handleClearMatches() {
+    if (!posting || posting === 'missing' || !posting.analysis) return;
+    const next = { ...posting, analysis: { ...posting.analysis, matches: [] } };
+    await saveJobPosting(next);
+    setPosting(next);
+    setConfirmingClear(false);
   }
 
   if (posting === 'missing') {
@@ -277,10 +294,25 @@ export default function MatchingReviewPage() {
           <ArrowLeft size={15} />
           Back to posting
         </Link>
-        {!confirmingRematch ? (
-          <Btn size="sm" variant="secondary" onClick={() => setConfirmingRematch(true)} disabled={rematchStatus === 'loading'}>
-            Re-run matching
-          </Btn>
+        {!confirmingRematch && !confirmingClear ? (
+          <div className="flex items-center gap-2">
+            <Btn size="sm" variant="danger" onClick={() => setConfirmingClear(true)}>
+              Clear matches
+            </Btn>
+            <Btn size="sm" variant="secondary" onClick={() => setConfirmingRematch(true)} disabled={rematchStatus === 'loading'}>
+              Re-run matching
+            </Btn>
+          </div>
+        ) : confirmingClear ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-600">This clears every requirement's evidence. Clear matches?</span>
+            <Btn size="sm" variant="danger" onClick={handleClearMatches}>
+              Yes, clear
+            </Btn>
+            <Btn size="sm" variant="secondary" onClick={() => setConfirmingClear(false)}>
+              Cancel
+            </Btn>
+          </div>
         ) : (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-slate-600">This will overwrite any manual edits. Re-run matching?</span>
@@ -293,6 +325,11 @@ export default function MatchingReviewPage() {
           </div>
         )}
       </div>
+      {rematchProgress && (
+        <div className="mb-4 max-w-xs ml-auto">
+          <ProgressBar done={rematchProgress.done} total={rematchProgress.total} />
+        </div>
+      )}
       {rematchError && <p className="text-xs text-red-600 mb-4">{rematchError}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
@@ -340,11 +377,11 @@ export default function MatchingReviewPage() {
                   return (
                     <div
                       key={atomId}
-                      className="rounded-xl border border-slate-200 flex items-center justify-between gap-3 px-3 py-2.5"
+                      className="rounded-xl border border-slate-200 flex items-start justify-between gap-3 px-3 py-2.5"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-start gap-2 min-w-0">
                         <Badge color="blue">{SOURCE_BADGE_LABEL[atom.source]}</Badge>
-                        <span className="text-sm text-slate-700 truncate">{atom.text}</span>
+                        <span className="text-sm text-slate-700 break-words">{atom.text}</span>
                       </div>
                       <div className="flex gap-1 shrink-0">
                         <Btn size="sm" variant="secondary" onClick={() => setPickerTarget({ mode: 'swap', atomId })}>
@@ -357,7 +394,6 @@ export default function MatchingReviewPage() {
                     </div>
                   );
                 })}
-                {selectedMatch.note && <p className="text-xs text-slate-400 italic">{selectedMatch.note}</p>}
               </div>
             )}
 
@@ -399,11 +435,11 @@ export default function MatchingReviewPage() {
                   <button
                     type="button"
                     onClick={() => toggleExpanded(atom.id)}
-                    className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left"
+                    className="w-full flex items-start justify-between gap-3 px-3 py-2.5 text-left"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-start gap-2 min-w-0">
                       <Badge color="blue">{SOURCE_BADGE_LABEL[atom.source]}</Badge>
-                      <span className="text-sm text-slate-700 truncate">{atom.text}</span>
+                      <span className="text-sm text-slate-700 break-words">{atom.text}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-[11px] text-slate-400">

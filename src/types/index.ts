@@ -115,8 +115,6 @@ export interface RequirementMatch {
   status: MatchStatus;
   /** References into ProfileAtom -- never free text. */
   atomIds: string[];
-  /** Optional short LLM rationale, e.g. why it's partial. */
-  note?: string;
 }
 
 export interface JobAnalysis {

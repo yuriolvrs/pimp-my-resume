@@ -11,8 +11,12 @@ import { retrieveCandidates } from './retrieval';
 import { buildMatchRequirementPrompt, isMatchVerification, type MatchCandidate } from '../../prompts/matchRequirement';
 import { generateStructured } from '../llm';
 
-/** How many verification calls are allowed in flight at once. */
-const CONCURRENCY = 3;
+// How many verification calls are allowed in flight at once. Kept low
+// (rather than higher) because several requirements' calls all sharing a
+// single small tokens-per-minute budget (see llm.ts's 429 handling) means
+// firing them in a bigger batch just makes them collide on the same cap
+// together instead of spacing naturally.
+const CONCURRENCY = 2;
 
 // Education isn't eligible evidence for requirement matching -- a degree
 // doesn't demonstrate a skill or requirement the way a skill/experience/
@@ -23,14 +27,21 @@ function matchable(atoms: ProfileAtom[]): ProfileAtom[] {
   return atoms.filter((atom) => atom.source !== 'education');
 }
 
-async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+  onProgress?: (done: number, total: number) => void,
+): Promise<R[]> {
   const results = new Array<R>(items.length);
   let next = 0;
+  let done = 0;
 
   async function worker(): Promise<void> {
     while (next < items.length) {
       const i = next++;
       results[i] = await fn(items[i]);
+      onProgress?.(++done, items.length);
     }
   }
 
@@ -57,17 +68,26 @@ async function matchOneRequirement(requirement: Requirement, atoms: ProfileAtom[
     return { requirementId: requirement.id, status: 'gap_unverified', atomIds: [] };
   }
 
-  return {
-    requirementId: requirement.id,
-    status: verification.status,
-    atomIds: confirmedIds,
-    note: verification.note,
-  };
+  return { requirementId: requirement.id, status: verification.status, atomIds: confirmedIds };
 }
 
-/** Runs the full matching pass; verification calls run with limited concurrency. */
-export async function runMatching(requirements: Requirement[], atoms: ProfileAtom[]): Promise<RequirementMatch[]> {
-  return mapWithConcurrency(requirements, CONCURRENCY, (requirement) => matchOneRequirement(requirement, atoms));
+/**
+ * Runs the full matching pass; verification calls run with limited
+ * concurrency. `onProgress` (if given) fires after each requirement
+ * finishes, so callers can show something better than an indefinite spinner
+ * on a pass that's one LLM call per requirement.
+ */
+export async function runMatching(
+  requirements: Requirement[],
+  atoms: ProfileAtom[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<RequirementMatch[]> {
+  return mapWithConcurrency(
+    requirements,
+    CONCURRENCY,
+    (requirement) => matchOneRequirement(requirement, atoms),
+    onProgress,
+  );
 }
 
 /**

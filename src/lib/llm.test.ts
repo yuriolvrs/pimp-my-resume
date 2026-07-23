@@ -53,6 +53,44 @@ describe('generate', () => {
 
     await expect(generate('say hi')).rejects.toThrow(/500/);
   });
+
+  it('retries after a 429 and succeeds once the rate limit clears', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 429, text: async () => 'Rate limit exceeded' } as Response)
+      .mockResolvedValueOnce(chatResponse('hi there'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const resultPromise = generate('say hi');
+    await vi.runAllTimersAsync();
+    const result = await resultPromise;
+
+    expect(result).toBe('hi there');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it('honors the provider-specified wait time on a 429 instead of a fixed delay', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        text: async () => 'Rate limit reached... Please try again in 4.31s.',
+      } as Response)
+      .mockResolvedValueOnce(chatResponse('hi there'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const resultPromise = generate('say hi');
+    await vi.runAllTimersAsync();
+    const result = await resultPromise;
+
+    expect(result).toBe('hi there');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
 });
 
 describe('generateStructured', () => {

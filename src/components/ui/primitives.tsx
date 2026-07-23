@@ -186,6 +186,29 @@ export function Btn({
   );
 }
 
+// Thin labeled progress bar -- used where a multi-step background pass (e.g.
+// one LLM call per requirement during matching) can report how far along it
+// is, instead of just an indefinite spinner.
+export function ProgressBar({ done, total }: { done: number; total: number }) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-slate-500">
+          Matching requirement {Math.min(done + 1, total)} of {total}…
+        </span>
+        <span className="text-xs text-slate-400">{pct}%</span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-slate-900 transition-[width] duration-300 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 const badgeColors = {
   slate: 'bg-slate-100 text-slate-500',
   green: 'bg-emerald-50 text-emerald-700',

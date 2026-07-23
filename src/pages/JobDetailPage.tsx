@@ -28,7 +28,7 @@ import { buildProfileAtoms } from '../lib/profileAtoms';
 import { runMatching } from '../lib/matching/runMatching';
 import { generateStructured, llmErrorMessage } from '../lib/llm';
 import { AnalysisEditor } from '../components/jobs/AnalysisEditor';
-import { Btn, Card, FieldInput, FieldSelect } from '../components/ui/primitives';
+import { Btn, Card, FieldInput, FieldSelect, ProgressBar } from '../components/ui/primitives';
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +39,7 @@ export default function JobDetailPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [matchProgress, setMatchProgress] = useState<{ done: number; total: number } | null>(null);
 
   const refresh = useCallback(() => {
     if (!id) return;
@@ -91,9 +92,12 @@ export default function JobDetailPage() {
     if (!posting || posting === 'missing' || !posting.analysis || !profile) return;
     setError(null);
     setStatus('loading');
+    setMatchProgress({ done: 0, total: posting.analysis.requirements.length });
     try {
       const atoms = buildProfileAtoms(profile);
-      const matches = await runMatching(posting.analysis.requirements, atoms);
+      const matches = await runMatching(posting.analysis.requirements, atoms, (done, total) =>
+        setMatchProgress({ done, total }),
+      );
       const analysis = { ...posting.analysis, matches };
       const next = { ...posting, analysis };
       // Await the write (rather than the fire-and-forget update() used for
@@ -106,6 +110,8 @@ export default function JobDetailPage() {
     } catch (err) {
       setError(llmErrorMessage(err, 'Matching'));
       setStatus('error');
+    } finally {
+      setMatchProgress(null);
     }
   }
 
@@ -299,7 +305,7 @@ export default function JobDetailPage() {
                       posting.analysis.requirements.length === 0
                     }
                   >
-                    {status === 'loading'
+                    {status === 'loading' && matchProgress
                       ? 'Matching…'
                       : posting.analysis.matches.length > 0
                         ? 'View matches'
@@ -307,6 +313,11 @@ export default function JobDetailPage() {
                   </Btn>
                 </div>
               </div>
+              {matchProgress && (
+                <div className="mb-4">
+                  <ProgressBar done={matchProgress.done} total={matchProgress.total} />
+                </div>
+              )}
               {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
               <AnalysisEditor value={posting.analysis} onChange={(analysis) => update({ analysis })} />
             </Card>

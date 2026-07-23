@@ -17,7 +17,11 @@ export interface Env {
 
 const MAX_BODY_BYTES = 100_000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 20;
+// A single "re-run matching" pass fires one verification call per
+// requirement (plus a retry on any malformed JSON reply), so a posting with
+// 15+ requirements can burst past 20 requests/min on its own -- raised to
+// give normal use headroom while still bounding abuse.
+const RATE_LIMIT_MAX_REQUESTS = 60;
 
 const rateLimiter = new RateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS);
 
