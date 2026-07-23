@@ -40,6 +40,8 @@ export function SectionTitle({ children, sub }: { children: ReactNode; sub?: str
 // Header for a collapsible, add-one-more list section (Work Experience,
 // Projects, Education, Writing Samples): title/sub on the left, an Add
 // button and expand/collapse chevron on the right.
+// In plain terms: the title bar you see above sections like Work Experience,
+// with an Add button and a collapse arrow.
 export function CollapsibleSectionHeader({
   title,
   sub,
@@ -85,6 +87,8 @@ export function CollapsibleSectionHeader({
 // Animates a section's content in/out on open/close, using the CSS
 // grid-template-rows 0fr/1fr trick so it works without measuring the
 // content's height (which varies with the number of list items).
+// In plain terms: smoothly expands/collapses a section instead of it
+// snapping open or shut.
 export function Collapsible({ open, children }: { open: boolean; children: ReactNode }) {
   return (
     <div
@@ -101,6 +105,8 @@ export function Collapsible({ open, children }: { open: boolean; children: React
 // header/scrollable body/footer themselves via children; this only owns the
 // overlay chrome and a plain CSS fade/scale-in transition (no animation
 // library).
+// In plain terms: the popup window with a dimmed background that appears
+// over the page, like the "Add evidence" picker.
 export function Modal({
   open,
   onClose,
@@ -189,6 +195,8 @@ export function Btn({
 // Thin labeled progress bar -- used where a multi-step background pass (e.g.
 // one LLM call per requirement during matching) can report how far along it
 // is, instead of just an indefinite spinner.
+// In plain terms: the progress bar shown while matching works through your
+// requirements one by one.
 export function ProgressBar({ done, total }: { done: number; total: number }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
@@ -355,7 +363,10 @@ export const MONTHS = [
   'December',
 ] as const;
 
-/** Descending list of years for start/end date dropdowns (next year down to 60 years back). */
+/**
+ * Descending list of years for start/end date dropdowns (next year down to 60 years back).
+ * In plain terms: the year choices shown in a date dropdown, newest first.
+ */
 export function yearOptions(): string[] {
   const end = new Date().getFullYear() + 1;
   const start = end - 61;
@@ -366,7 +377,10 @@ export function yearOptions(): string[] {
   return years;
 }
 
-/** Renders a month/year pair as e.g. "March 2022", "2022", or "" if both are empty. */
+/**
+ * Renders a month/year pair as e.g. "March 2022", "2022", or "" if both are empty.
+ * In plain terms: turns a month + year into the text shown on a resume date.
+ */
 export function formatMonthYear(month?: string, year?: string): string {
   if (!year) return month ?? '';
   return month ? `${month} ${year}` : year;
@@ -375,6 +389,8 @@ export function formatMonthYear(month?: string, year?: string): string {
 // Flat chip list with an add-one input, e.g. profile skills or a job
 // posting's extracted keywords: type a value, hit Enter or Add, click x to
 // remove a chip.
+// In plain terms: the "type a word, press Enter to add a chip" input used
+// for things like skills and keywords.
 export function TagInput({
   value,
   onChange,

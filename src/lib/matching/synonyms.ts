@@ -4,7 +4,11 @@
 // In plain terms: a list of "these mean basically the same thing" word
 // groups, so matching a requirement to a skill doesn't require exact wording.
 
-/** Each inner array is a group of interchangeable lowercase terms/phrases. */
+/**
+ * Each inner array is a group of interchangeable lowercase terms/phrases.
+ * In plain terms: groups of words that count as the same thing, like "js"
+ * and "javascript".
+ */
 export const SYNONYM_GROUPS: string[][] = [
   ['java', 'jvm'],
   ['spring', 'spring mvc', 'spring boot'],
@@ -42,6 +46,9 @@ function buildIndex(): Map<string, string> {
 /**
  * The one term standing in for the given (already-lowercased) term's synonym
  * group, or the term itself if it isn't in any group.
+ *
+ * In plain terms: converts a word to its "standard" spelling so equivalent
+ * terms compare equal, e.g. "jvm" becomes "java".
  */
 export function canonicalOf(term: string): string {
   if (!canonicalIndex) canonicalIndex = buildIndex();

@@ -9,7 +9,10 @@
 
 import type { JobAnalysis, RequirementSeverity } from '../types';
 
-/** Job posting text beyond this length is truncated before it's sent. */
+/**
+ * Job posting text beyond this length is truncated before it's sent.
+ * In plain terms: very long postings get cut off before we send them to the AI.
+ */
 export const MAX_POSTING_CHARS = 12_000;
 
 const TRUNCATION_MARKER = '\n…[truncated]';
@@ -22,6 +25,8 @@ function truncate(text: string, maxChars: number): string {
 // truncated before assembly (never the assembled prompt -- that would risk
 // chopping off the instructions), keeping the request comfortably under the
 // Worker's 100KB body limit.
+// In plain terms: assembles the actual message we send to the AI to analyze
+// a job posting.
 export function buildAnalyzePostingPrompt(rawText: string): string {
   const posting = truncate(rawText.trim(), MAX_POSTING_CHARS);
 
@@ -84,6 +89,8 @@ function isExtractedRequirement(x: unknown): x is ExtractedRequirement {
 // objects"): this data flows straight into UI as controlled values, so a
 // stray number or null would render as broken UI rather than being caught
 // here and retried by generateStructured.
+// In plain terms: checks that the AI's response to a job-posting analysis
+// actually has the shape we expect before we trust it.
 export function isExtractedAnalysis(x: unknown): x is ExtractedAnalysis {
   if (typeof x !== 'object' || x === null) return false;
   const candidate = x as Record<string, unknown>;
@@ -101,6 +108,9 @@ export function isExtractedAnalysis(x: unknown): x is ExtractedAnalysis {
  * assigns a stable id + posting-order index to each requirement, and starts
  * with no matches (the separate matching pass in src/lib/matching/ fills
  * those in once the user confirms the requirements).
+ *
+ * In plain terms: takes what the AI just extracted from a posting and puts
+ * it into the shape the app stores, with matching left for later.
  */
 export function toJobAnalysis(extracted: ExtractedAnalysis): JobAnalysis {
   return {

@@ -25,7 +25,10 @@ export interface BackupFile {
 
 export class BackupValidationError extends Error {}
 
-/** Pure — shapes table contents into the exportable backup file. */
+/**
+ * Pure — shapes table contents into the exportable backup file.
+ * In plain terms: wraps your data up into the file that gets downloaded.
+ */
 export function buildBackup(data: BackupData): BackupFile {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -38,7 +41,11 @@ function isStringArrayOfObjects(x: unknown): x is object[] {
   return Array.isArray(x) && x.every((item) => typeof item === 'object' && item !== null);
 }
 
-/** Pure — structural validation only; does not deep-check every field. */
+/**
+ * Pure — structural validation only; does not deep-check every field.
+ * In plain terms: a quick sanity check that an imported file looks like a
+ * real backup, not a full check of every value inside it.
+ */
 export function validateBackup(x: unknown): x is BackupFile {
   if (typeof x !== 'object' || x === null) return false;
   const candidate = x as Record<string, unknown>;
@@ -59,7 +66,11 @@ export function validateBackup(x: unknown): x is BackupFile {
   );
 }
 
-/** Pure — parses and validates a backup JSON string, throwing on any problem. */
+/**
+ * Pure — parses and validates a backup JSON string, throwing on any problem.
+ * In plain terms: reads the backup file you upload and complains clearly if
+ * it isn't a valid one.
+ */
 export function parseBackup(json: string): BackupFile {
   let parsed: unknown;
   try {
@@ -81,7 +92,11 @@ export function parseBackup(json: string): BackupFile {
   return parsed;
 }
 
-/** Reads all tables and produces a backup file. */
+/**
+ * Reads all tables and produces a backup file.
+ * In plain terms: gathers everything stored in the browser into one file
+ * you can download.
+ */
 export async function exportAllData(): Promise<BackupFile> {
   const data = await db.transaction(
     'r',
@@ -99,7 +114,11 @@ export async function exportAllData(): Promise<BackupFile> {
   return buildBackup(data);
 }
 
-/** Clears all tables, then restores them from the given backup. */
+/**
+ * Clears all tables, then restores them from the given backup.
+ * In plain terms: wipes what's currently stored and replaces it with the
+ * contents of the uploaded backup file.
+ */
 export async function importAllData(backup: BackupFile): Promise<void> {
   await db.transaction(
     'rw',
@@ -124,7 +143,11 @@ export async function importAllData(backup: BackupFile): Promise<void> {
   );
 }
 
-/** Wipes all local data. */
+/**
+ * Wipes all local data.
+ * In plain terms: the "Delete All Data" button — erases everything stored
+ * in the browser.
+ */
 export async function deleteAllData(): Promise<void> {
   await db.transaction(
     'rw',

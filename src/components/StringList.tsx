@@ -22,6 +22,9 @@ interface StringListProps {
  * EditableList specialized for plain-string items: skill items, education
  * details, writing samples, bullets. Single place that owns the
  * input-vs-textarea choice and styling for "a list of text".
+ *
+ * In plain terms: the same add/remove list, just for simple text entries
+ * instead of multi-field items.
  */
 export function StringList({
   items,

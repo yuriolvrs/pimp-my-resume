@@ -40,6 +40,8 @@ function groupBySourceLabel(atoms: ProfileAtom[]): [string, ProfileAtom[]][] {
 
 // atom.sourceLabel is e.g. "Experience: Title, Company" / "Project: Name" --
 // strip the source's own prefix since it's already implied by the section heading.
+// In plain terms: removes the "Experience:" / "Project:" prefix from a label
+// so it isn't shown twice.
 function stripLabelPrefix(label: string): string {
   const idx = label.indexOf(': ');
   return idx === -1 ? label : label.slice(idx + 2);

@@ -24,6 +24,7 @@ General working style, in addition to the project-specific rules below (Conventi
 
 ## Conventions
 - Every new file gets a short header comment at the very top: one line explaining what it is/does in normal technical terms, and one line in plain English (`// In plain terms: ...`). Skip only where the format has no comment syntax (strict JSON) or the file is already self-describing prose (the root .md docs).
+- Every new non-trivial function or class gets a description comment above it (JSDoc or `//`), same as file headers: one line/paragraph in normal technical terms, plus a plain-English line (`In plain terms: ...`). Skip only for trivial one-liners whose name already says everything (e.g. a short getter/wrapper).
 - TypeScript strict mode everywhere, including the Worker.
 - Shared types for all data models live in `src/types/` and are the single source of truth; Dexie tables and prompts derive from them.
 - LLM prompts request JSON-only output; parse defensively (strip fences, validate shape, one retry). Prompt templates live in `src/prompts/`.

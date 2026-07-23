@@ -26,6 +26,9 @@ interface EditableListProps<T> {
  * per-item fields. Every repeating-list section in the app (skills,
  * experience, projects, education, writing samples, links, bullets) is built
  * on this so they behave and look the same.
+ *
+ * In plain terms: the "add another item" / "remove this item" list you see
+ * throughout the Profile page.
  */
 export function EditableList<T>({
   items,

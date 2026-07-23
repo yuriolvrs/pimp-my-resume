@@ -44,6 +44,8 @@ function tokenize(text: string): string[] {
 // count as the same term. Plurals also get their singular form added as an
 // alias (short/acronym-length tokens are left alone) so "projects" lines up
 // with a profile atom that says "project".
+// In plain terms: breaks text into words and normalizes them (synonyms,
+// plurals) so similar wording still matches.
 function canonicalTokenSet(text: string): Set<string> {
   const set = new Set<string>();
   for (const token of tokenize(text)) {
@@ -61,7 +63,11 @@ function containsTerm(text: string, term: string): boolean {
   return new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text);
 }
 
-/** Extra credit when a multi-word synonym phrase (e.g. "spring mvc") appears on both sides. */
+/**
+ * Extra credit when a multi-word synonym phrase (e.g. "spring mvc") appears on both sides.
+ * In plain terms: a small score boost when the requirement and the profile
+ * text share a matching multi-word term.
+ */
 function phraseMatchBonus(requirementText: string, atomText: string): number {
   const reqLower = requirementText.toLowerCase();
   const atomLower = atomText.toLowerCase();
@@ -78,6 +84,9 @@ function phraseMatchBonus(requirementText: string, atomText: string): number {
  * Top-k profile atoms whose text overlaps (directly or via synonym) with the
  * requirement text, above a minimum score floor. Returns [] if nothing clears
  * the floor -- callers should treat that as "no plausible candidates."
+ *
+ * In plain terms: picks the handful of profile snippets that best match a
+ * requirement, or none if nothing seems relevant enough.
  */
 export function retrieveCandidates(
   requirementText: string,

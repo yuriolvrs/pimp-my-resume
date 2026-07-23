@@ -36,6 +36,8 @@ function sleep(ms: number): Promise<void> {
 // The provider's 429 body says exactly how long to wait (e.g. "Please try
 // again in 4.31s"); honoring that is far more reliable than guessing with a
 // fixed schedule, since a too-short wait just re-hits the same cap.
+// In plain terms: figures out how long to pause before retrying after
+// getting rate-limited.
 function retryDelayMs(body: string, attempt: number): number {
   const match = body.match(/try again in ([\d.]+)s/i);
   if (match) return Math.ceil(parseFloat(match[1]) * 1000) + 500;
@@ -75,6 +77,8 @@ export async function generate(prompt: string, options: GenerateOptions = {}): P
 // Every screen that runs an LLM call needs the same three-way message
 // (malformed JSON / failed request / something else); `label` names the
 // action, e.g. "Analysis" or "Matching".
+// In plain terms: turns whatever went wrong with an AI call into one clear
+// error message to show the user.
 export function llmErrorMessage(err: unknown, label: string): string {
   if (err instanceof JsonParseError) {
     return `${label} failed: the model returned an unusable response. Try again — the model this app uses is small and occasionally produces malformed output.`;

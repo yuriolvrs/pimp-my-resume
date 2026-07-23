@@ -23,6 +23,8 @@ const CONCURRENCY = 2;
 // project/additional-info atom does, and it's excluded from the manual
 // evidence picker (EvidenceModal's SELECTABLE_SOURCES) for the same reason.
 // Filtered here so automatic matching can't surface it either.
+// In plain terms: leaves education entries out of automatic matching, since
+// a degree isn't evidence for a specific skill.
 function matchable(atoms: ProfileAtom[]): ProfileAtom[] {
   return atoms.filter((atom) => atom.source !== 'education');
 }
@@ -76,6 +78,9 @@ async function matchOneRequirement(requirement: Requirement, atoms: ProfileAtom[
  * concurrency. `onProgress` (if given) fires after each requirement
  * finishes, so callers can show something better than an indefinite spinner
  * on a pass that's one LLM call per requirement.
+ *
+ * In plain terms: checks every requirement against your profile and reports
+ * progress as it goes.
  */
 export async function runMatching(
   requirements: Requirement[],
@@ -97,6 +102,9 @@ export async function runMatching(
  * (excluding the rejected atom and anything still confirmed), it's swapped
  * in and the existing status is kept; otherwise the requirement becomes
  * gap_unverified (candidates existed, none panned out).
+ *
+ * In plain terms: when you tell the app "no, that evidence doesn't count,"
+ * this figures out what the match status should be instead.
  */
 export function statusAfterReject(
   match: RequirementMatch,

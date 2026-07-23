@@ -36,6 +36,9 @@ export function isOversized(bodyText: string, maxBytes: number): boolean {
  * dampening, not a hard guarantee. A KV- or Durable-Object-backed limiter
  * (or Cloudflare's Rate Limiting binding) is the upgrade path if stronger
  * enforcement is needed later.
+ *
+ * In plain terms: caps how many requests one IP can make in a given time
+ * window, as a simple first line of defense against abuse.
  */
 export class RateLimiter {
   private readonly hits = new Map<string, { count: number; windowStart: number }>();

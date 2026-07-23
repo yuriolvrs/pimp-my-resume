@@ -6,7 +6,10 @@
 import { db } from './db';
 import type { Profile } from '../types';
 
-/** v1 supports a single local profile, addressed by a fixed id. */
+/**
+ * v1 supports a single local profile, addressed by a fixed id.
+ * In plain terms: there's only ever one profile stored, and this is its id.
+ */
 export const DEFAULT_PROFILE_ID = 'default';
 
 export function emptyProfile(): Profile {
@@ -25,6 +28,8 @@ export function emptyProfile(): Profile {
 
 // Skills used to be grouped ({ category, items }); flattens any
 // still-stored profile from before that shape changed to a plain string list.
+// In plain terms: converts old-format grouped skills into today's simple
+// list, if needed.
 function normalizeSkills(skills: unknown): string[] {
   if (!Array.isArray(skills)) return [];
   return skills.flatMap((skill) => {
@@ -51,6 +56,8 @@ export async function saveProfile(profile: Profile): Promise<void> {
 // Whether the profile has enough content to be worth comparing against a job
 // posting. Used to gate the "Analyze" action so a blank profile can't be sent
 // to the LLM (it would only ever produce gaps, never matches).
+// In plain terms: checks whether your profile has enough filled in to bother
+// analyzing a job against it.
 export function hasProfileContent(profile: Profile): boolean {
   return (
     profile.summary.trim() !== '' ||
