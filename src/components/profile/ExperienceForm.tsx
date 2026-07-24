@@ -5,6 +5,7 @@
 // at each one.
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { ExperienceEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
@@ -22,15 +23,18 @@ import {
 const YEARS = yearOptions();
 
 function newExperienceEntry(): ExperienceEntry {
-  return { company: '', title: '', current: false, bullets: [] };
+  return { section: 'Experience', company: '', title: '', current: false, bullets: [] };
 }
 
 export function ExperienceForm({
   value,
   onChange,
+  bulletBadge,
 }: {
   value: ExperienceEntry[];
   onChange: (experience: ExperienceEntry[]) => void;
+  /** Optional per-bullet extra content (e.g. an "unevidenced" warning badge) -- used by ResumeEditor, unused on the Profile page. */
+  bulletBadge?: (bulletText: string) => ReactNode;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -53,6 +57,13 @@ export function ExperienceForm({
           hideAddButton
           renderItem={(entry, update) => (
             <div className="space-y-3">
+              <FieldInput
+                label="Section"
+                placeholder="Experience"
+                value={entry.section ?? ''}
+                onChange={(section) => update({ ...entry, section })}
+              />
+
               <div className="grid grid-cols-2 gap-3">
                 <FieldInput
                   label="Company"
@@ -143,6 +154,7 @@ export function ExperienceForm({
                   multiline
                   addLabel="Add bullet"
                   emptyLabel="No bullets yet."
+                  itemBadge={bulletBadge}
                 />
               </div>
             </div>

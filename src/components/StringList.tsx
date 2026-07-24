@@ -5,6 +5,7 @@
 // In plain terms: a simpler version of the list component, just for lists
 // of plain text.
 
+import type { ReactNode } from 'react';
 import { EditableList } from './EditableList';
 
 interface StringListProps {
@@ -16,6 +17,8 @@ interface StringListProps {
   addLabel?: string;
   emptyLabel?: string;
   hideAddButton?: boolean;
+  /** Optional extra content rendered above an item's input, e.g. a warning badge. */
+  itemBadge?: (value: string) => ReactNode;
 }
 
 /**
@@ -35,6 +38,7 @@ export function StringList({
   addLabel = 'Add',
   emptyLabel,
   hideAddButton = false,
+  itemBadge,
 }: StringListProps) {
   const inputClass =
     'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-400/25 focus:border-blue-400 transition-all';
@@ -47,27 +51,30 @@ export function StringList({
       addLabel={addLabel}
       emptyLabel={emptyLabel}
       hideAddButton={hideAddButton}
-      renderItem={(value, update) =>
-        multiline ? (
-          <textarea
-            className={inputClass}
-            rows={3}
-            value={value}
-            placeholder={placeholder}
-            onChange={(e) => update(e.target.value)}
-            onBlur={() => onBlurCommit?.(items)}
-          />
-        ) : (
-          <input
-            className={inputClass}
-            type="text"
-            value={value}
-            placeholder={placeholder}
-            onChange={(e) => update(e.target.value)}
-            onBlur={() => onBlurCommit?.(items)}
-          />
-        )
-      }
+      renderItem={(value, update) => (
+        <div className={itemBadge ? 'space-y-1.5' : undefined}>
+          {itemBadge?.(value)}
+          {multiline ? (
+            <textarea
+              className={inputClass}
+              rows={3}
+              value={value}
+              placeholder={placeholder}
+              onChange={(e) => update(e.target.value)}
+              onBlur={() => onBlurCommit?.(items)}
+            />
+          ) : (
+            <input
+              className={inputClass}
+              type="text"
+              value={value}
+              placeholder={placeholder}
+              onChange={(e) => update(e.target.value)}
+              onBlur={() => onBlurCommit?.(items)}
+            />
+          )}
+        </div>
+      )}
     />
   );
 }

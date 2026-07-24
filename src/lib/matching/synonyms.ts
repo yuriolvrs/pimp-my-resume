@@ -26,6 +26,20 @@ export const SYNONYM_GROUPS: string[][] = [
   ['rest', 'restful', 'rest api'],
   ['ui', 'user interface'],
   ['ux', 'user experience'],
+  // Office/productivity tools -- a posting naming one of these usually means
+  // "comfortable with office software" broadly, which a general "Microsoft
+  // Office" or "Google Workspace" skill line already covers.
+  ['excel', 'powerpoint', 'microsoft office', 'ms office', 'word', 'outlook'],
+  ['google workspace', 'google docs', 'google sheets', 'google slides'],
+  // Marketing/e-commerce -- bridges posting phrasing ("digital", "e-commerce")
+  // to profile evidence that names the specific platform/activity instead.
+  ['e commerce', 'ecommerce', 'digital marketing', 'online selling', 'online store'],
+  ['seo', 'search engine optimization'],
+  ['sku', 'stock keeping unit'],
+  // Creative/content -- bridges "digital content" / "creative development"
+  // posting language to specific design/content tools or activities.
+  ['digital content', 'creative development', 'graphic design', 'canva', 'photography',
+    'content creation', 'photo editing', 'publicity', 'promotions'],
 ];
 
 let canonicalIndex: Map<string, string> | null = null;

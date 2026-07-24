@@ -28,6 +28,8 @@ export interface Contact {
 }
 
 export interface ExperienceEntry {
+  /** User-defined group heading for the resume (e.g. "Work Experience", "Extra-Curricular Activities"). Empty/unset falls back to "Experience". */
+  section?: string;
   company: string;
   title: string;
   startMonth?: string;
@@ -60,12 +62,18 @@ export interface EducationEntry {
   details?: string[];
 }
 
+/** A named group of skills, e.g. { category: "Languages", items: ["Java", "Python"] }. */
+export interface SkillGroup {
+  category: string;
+  items: string[];
+}
+
 export interface Profile {
   /** Single local profile in v1; fixed id keeps the row addressable. */
   id: string;
   contact: Contact;
   summary: string;
-  skills: string[];
+  skills: SkillGroup[];
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
   education: EducationEntry[];
@@ -150,7 +158,7 @@ export type GenerationType = 'resume' | 'coverLetter';
 export interface ResumeContent {
   contact: Contact;
   summary: string;
-  skills: string[];
+  skills: SkillGroup[];
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
   education: EducationEntry[];
@@ -166,10 +174,17 @@ export interface CoverLetterContent {
   closing: string;
 }
 
-/** Links a generated fragment back to the profile evidence that grounds it. */
+/**
+ * Marks one included resume item (a bullet or skill, copied verbatim from
+ * the profile -- nothing here is generated text) as matched to this job's
+ * requirements, referencing the ProfileAtom(s) it corresponds to. Used only
+ * to show a "matched to this job" indicator in the editor; since resume
+ * content is selected/reordered rather than generated, there is no
+ * fabrication risk to trace here the way sourceMap once existed for.
+ */
 export interface SourceMapEntry {
   generatedText: string;
-  profileEvidence: string[];
+  atomIds: string[];
 }
 
 export interface Generation {

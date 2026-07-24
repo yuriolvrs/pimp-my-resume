@@ -11,8 +11,8 @@
 // profile covers each requirement, and fix it up where needed.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Trash2 } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, ChevronDown, FileText, Trash2 } from 'lucide-react';
 import type { JobPosting, MatchStatus, Profile, ProfileAtom, RequirementMatch } from '../types';
 import { loadJobPosting, saveJobPosting } from '../lib/jobStore';
 import { loadProfile, saveProfile } from '../lib/profileStore';
@@ -48,6 +48,7 @@ type PickerTarget = { mode: 'swap'; atomId: string } | null;
 
 export default function MatchingReviewPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [posting, setPosting] = useState<JobPosting | null | 'missing'>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -512,6 +513,13 @@ export default function MatchingReviewPage() {
           )}
         </div>
       </Card>
+
+      <div className="flex justify-end mt-5">
+        <Btn onClick={() => navigate(`/jobs/${posting.id}/resume`)}>
+          <FileText size={14} />
+          Generate resume
+        </Btn>
+      </div>
 
       <EvidenceModal
         open={evidenceModalOpen}

@@ -4,7 +4,7 @@
 // browser's storage.
 
 import { db } from './db';
-import type { Profile } from '../types';
+import type { Profile, SkillGroup } from '../types';
 
 /**
  * v1 supports a single local profile, addressed by a fixed id.
@@ -26,16 +26,26 @@ export function emptyProfile(): Profile {
   };
 }
 
-// Skills used to be grouped ({ category, items }); flattens any
-// still-stored profile from before that shape changed to a plain string list.
-// In plain terms: converts old-format grouped skills into today's simple
-// list, if needed.
-function normalizeSkills(skills: unknown): string[] {
+// Skills are grouped by category ({ category, items }). Two older shapes
+// need normalizing on load: a flat string list (a since-reversed decision to
+// flatten categories away), and a grouped shape whose items weren't
+// strictly validated. Both are coerced into today's SkillGroup[] shape.
+// In plain terms: converts whatever shape skills were saved in (old flat
+// list or old grouped format) into today's category-grouped shape.
+export function normalizeSkills(skills: unknown): SkillGroup[] {
   if (!Array.isArray(skills)) return [];
-  return skills.flatMap((skill) => {
-    if (typeof skill === 'string') return [skill];
-    const items = (skill as { items?: unknown } | null)?.items;
-    return Array.isArray(items) ? items.filter((item): item is string => typeof item === 'string') : [];
+
+  if (skills.every((item) => typeof item === 'string')) {
+    const items = skills.filter((item): item is string => item.trim() !== '');
+    return items.length > 0 ? [{ category: 'Skills', items }] : [];
+  }
+
+  return skills.map((group) => {
+    const g = group as { category?: unknown; items?: unknown } | null;
+    return {
+      category: typeof g?.category === 'string' ? g.category : '',
+      items: Array.isArray(g?.items) ? g.items.filter((item): item is string => typeof item === 'string') : [],
+    };
   });
 }
 
@@ -61,7 +71,7 @@ export async function saveProfile(profile: Profile): Promise<void> {
 export function hasProfileContent(profile: Profile): boolean {
   return (
     profile.summary.trim() !== '' ||
-    profile.skills.length > 0 ||
+    profile.skills.some((group) => group.items.length > 0) ||
     profile.experience.length > 0 ||
     profile.projects.length > 0 ||
     profile.education.length > 0

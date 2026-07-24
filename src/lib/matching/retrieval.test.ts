@@ -41,4 +41,28 @@ describe('retrieveCandidates', () => {
       expect(candidates[i - 1].score).toBeGreaterThanOrEqual(candidates[i].score);
     }
   });
+
+  it('matches a phrase synonym across a unicode (non-ASCII) hyphen', () => {
+    // Job postings often spell "e-commerce" with a non-breaking hyphen
+    // (U+2011) rather than a plain "-"; the synonym group is written
+    // space-separated so both spellings normalize to the same match.
+    const atoms = [atom({ id: 'ecom', sourceLabel: 'E-Commerce Operator', text: 'Product listing and SKU assignment' })];
+    const candidates = retrieveCandidates('exposure to digital or e‑commerce', atoms);
+    expect(candidates.map((c) => c.atom.id)).toContain('ecom');
+  });
+
+  it('matches "PowerPoint and Excel" to a general "Microsoft Office" skill', () => {
+    const atoms = [atom({ id: 'msoffice', text: 'Microsoft Office' })];
+    const candidates = retrieveCandidates('Proficient in PowerPoint and Excel', atoms);
+    expect(candidates.map((c) => c.atom.id)).toContain('msoffice');
+  });
+
+  it('matches "digital content and creative development" to Canva/Photography skills', () => {
+    const atoms = [
+      atom({ id: 'photo', text: 'Photography' }),
+      atom({ id: 'canva', text: 'Knowledge in editing presentations in Canva and photos' }),
+    ];
+    const candidates = retrieveCandidates('Interest in digital content and creative development', atoms);
+    expect(candidates.map((c) => c.atom.id)).toEqual(expect.arrayContaining(['photo', 'canva']));
+  });
 });

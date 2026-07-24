@@ -4,6 +4,7 @@
 // built.
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { ContactLink, ProjectEntry } from '../../types';
 import { EditableList } from '../EditableList';
 import { StringList } from '../StringList';
@@ -23,9 +24,12 @@ function newProjectEntry(): ProjectEntry {
 export function ProjectsForm({
   value,
   onChange,
+  bulletBadge,
 }: {
   value: ProjectEntry[];
   onChange: (projects: ProjectEntry[]) => void;
+  /** Optional per-bullet extra content (e.g. an "unevidenced" warning badge) -- used by ResumeEditor, unused on the Profile page. */
+  bulletBadge?: (bulletText: string) => ReactNode;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -70,6 +74,7 @@ export function ProjectsForm({
                   multiline
                   addLabel="Add bullet"
                   emptyLabel="No bullets yet."
+                  itemBadge={bulletBadge}
                 />
               </div>
               <div>

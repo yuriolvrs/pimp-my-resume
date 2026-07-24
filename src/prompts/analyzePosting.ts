@@ -39,13 +39,15 @@ Exact shape (no extra keys, no markdown, no code fences, no commentary):
 Rules:
 - roleSummary: one or two sentences describing the role and what it does.
 - requirements: at most 8 concrete qualifications a candidate must have to be considered --
-  required skills, years of experience, tools, certifications, education. Postings often
+  required skills, years of experience, tools, certifications. Postings often
   separate a "Responsibilities" or "Roles & Responsibilities" section (day-to-day duties of
   the job) from a "Requirements" or "Qualifications" section (what the candidate needs to
   bring). Only pull from the qualifications side. Do NOT include job duties/responsibilities
   (e.g. "coordinate with other teams", "maintain the architecture", "troubleshoot production
   issues") even if the posting lists them prominently -- those describe the job, not what the
-  candidate must demonstrate.
+  candidate must demonstrate. Do NOT include degree/education requirements (e.g. "Bachelor's
+  degree in X") -- a profile has no matchable evidence for those, so they can never be
+  anything but a permanent gap.
 - severity: "required" if the posting treats it as mandatory, "preferred" if the posting says
   something like "nice to have", "preferred", "bonus", or "a plus".
 - requirements must be listed in the same order they appear in the posting text.

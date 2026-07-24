@@ -42,6 +42,16 @@ describe('parseJson', () => {
     expect(parseJson(raw, isHello)).toEqual({ hello: 'world' });
   });
 
+  it('extracts only the first complete object when the model appends extra alternatives after it', () => {
+    const raw = '{"hello":"world"}\n\nor\n\n{"hello":"different"}';
+    expect(parseJson(raw, isHello)).toEqual({ hello: 'world' });
+  });
+
+  it('does not get confused by braces inside a string value', () => {
+    const raw = '{"hello":"a {weird} value"} extra junk after';
+    expect(parseJson(raw, isHello)).toEqual({ hello: 'a {weird} value' });
+  });
+
   it('throws JsonParseError on malformed JSON', () => {
     expect(() => parseJson('{not json', isHello)).toThrow(JsonParseError);
   });

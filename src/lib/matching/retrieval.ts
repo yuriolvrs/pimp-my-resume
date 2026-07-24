@@ -21,8 +21,8 @@ const STOPWORDS = new Set([
   'fluency', 'mix', 'develop',
 ]);
 
-export const DEFAULT_TOP_K = 5;
-export const DEFAULT_SCORE_FLOOR = 0.2;
+export const DEFAULT_TOP_K = 8;
+export const DEFAULT_SCORE_FLOOR = 0.12;
 
 export interface CandidateAtom {
   atom: ProfileAtom;
@@ -63,14 +63,24 @@ function containsTerm(text: string, term: string): boolean {
   return new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text);
 }
 
+// Job postings often use non-ASCII punctuation (e.g. U+2011 non-breaking
+// hyphen in "e‑commerce") that a plain hyphen in a synonym term wouldn't
+// match. Collapsing anything that isn't alphanumeric to a space -- same
+// treatment tokenize() already gives each side -- keeps phrase matching
+// unicode-agnostic; synonym phrases below are written space-separated
+// (e.g. "e commerce") to match either spelling once normalized.
+function normalizeForPhraseMatch(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9.+#\s]/g, ' ');
+}
+
 /**
  * Extra credit when a multi-word synonym phrase (e.g. "spring mvc") appears on both sides.
  * In plain terms: a small score boost when the requirement and the profile
  * text share a matching multi-word term.
  */
 function phraseMatchBonus(requirementText: string, atomText: string): number {
-  const reqLower = requirementText.toLowerCase();
-  const atomLower = atomText.toLowerCase();
+  const reqLower = normalizeForPhraseMatch(requirementText);
+  const atomLower = normalizeForPhraseMatch(atomText);
   let bonus = 0;
   for (const group of SYNONYM_GROUPS) {
     const reqHas = group.some((term) => containsTerm(reqLower, term));

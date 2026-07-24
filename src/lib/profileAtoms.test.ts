@@ -14,12 +14,26 @@ function profile(overrides: Partial<Profile>): Profile {
 }
 
 describe('buildProfileAtoms', () => {
-  it('indexes one atom per skill', () => {
-    const atoms = buildProfileAtoms(profile({ skills: ['Java', 'TypeScript'] }));
+  it('indexes one atom per skill, labeled with its category', () => {
+    const atoms = buildProfileAtoms(
+      profile({ skills: [{ category: 'Languages', items: ['Java', 'TypeScript'] }] }),
+    );
     expect(atoms).toEqual([
-      expect.objectContaining({ source: 'skills', sourceLabel: 'Skills', text: 'Java' }),
-      expect.objectContaining({ source: 'skills', sourceLabel: 'Skills', text: 'TypeScript' }),
+      expect.objectContaining({ source: 'skills', sourceLabel: 'Skills: Languages', text: 'Java' }),
+      expect.objectContaining({ source: 'skills', sourceLabel: 'Skills: Languages', text: 'TypeScript' }),
     ]);
+  });
+
+  it('keeps skills in separate categories distinct', () => {
+    const atoms = buildProfileAtoms(
+      profile({
+        skills: [
+          { category: 'Languages', items: ['Java'] },
+          { category: 'Tools', items: ['Docker'] },
+        ],
+      }),
+    );
+    expect(atoms.map((a) => a.sourceLabel)).toEqual(['Skills: Languages', 'Skills: Tools']);
   });
 
   it('labels experience bullets with role and company', () => {
@@ -71,19 +85,19 @@ describe('buildProfileAtoms', () => {
   });
 
   it('skips blank entries', () => {
-    const atoms = buildProfileAtoms(profile({ skills: ['Java', '   ', ''] }));
+    const atoms = buildProfileAtoms(profile({ skills: [{ category: 'Languages', items: ['Java', '   ', ''] }] }));
     expect(atoms).toHaveLength(1);
   });
 
   it('produces stable ids across re-derivation of unchanged content', () => {
-    const p = profile({ skills: ['Java'] });
+    const p = profile({ skills: [{ category: 'Languages', items: ['Java'] }] });
     const first = buildProfileAtoms(p);
     const second = buildProfileAtoms(p);
     expect(first[0].id).toBe(second[0].id);
   });
 
   it('gives distinct ids to duplicate text within the same source', () => {
-    const atoms = buildProfileAtoms(profile({ skills: ['Java', 'Java'] }));
+    const atoms = buildProfileAtoms(profile({ skills: [{ category: 'Languages', items: ['Java', 'Java'] }] }));
     expect(atoms[0].id).not.toBe(atoms[1].id);
   });
 });

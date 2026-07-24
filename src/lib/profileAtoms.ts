@@ -33,11 +33,20 @@ function dedupeIds(atoms: ProfileAtom[]): ProfileAtom[] {
   });
 }
 
-function experienceLabel(entry: ExperienceEntry): string {
+// Exported so callers that need to map an atom back to the specific profile
+// entry it came from (e.g. resume generation grouping bullets by job/project/
+// skill category) can recompute the same label instead of duplicating the
+// string format.
+// In plain terms: the exact label text used for one job, project, or skill category.
+export function skillsLabel(category: string): string {
+  return `Skills: ${category}`;
+}
+
+export function experienceLabel(entry: ExperienceEntry): string {
   return `Experience: ${entry.title}, ${entry.company}`;
 }
 
-function projectLabel(entry: ProjectEntry): string {
+export function projectLabel(entry: ProjectEntry): string {
   return `Project: ${entry.name}`;
 }
 
@@ -48,9 +57,12 @@ function educationLabel(entry: EducationEntry): string {
 export function buildProfileAtoms(profile: Profile): ProfileAtom[] {
   const atoms: ProfileAtom[] = [];
 
-  for (const skill of profile.skills) {
-    if (skill.trim() === '') continue;
-    atoms.push({ id: atomId('skills', skill), source: 'skills', sourceLabel: 'Skills', text: skill });
+  for (const group of profile.skills) {
+    const label = skillsLabel(group.category);
+    for (const skill of group.items) {
+      if (skill.trim() === '') continue;
+      atoms.push({ id: atomId('skills', skill), source: 'skills', sourceLabel: label, text: skill });
+    }
   }
 
   for (const entry of profile.experience) {

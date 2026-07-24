@@ -14,6 +14,17 @@ export function stripCodeFences(raw: string): string {
   return fenceMatch ? fenceMatch[1].trim() : trimmed;
 }
 
+// Scans from the first { or [ and returns only that one balanced structure,
+// stopping the instant its matching closing brace/bracket is found --
+// correctly skipping braces/brackets inside string values. This matters
+// because a small model asked for "one JSON object" sometimes answers with
+// several alternative attempts concatenated (e.g. separated by "or" or blank
+// lines, occasionally with no separator at all): grabbing everything between
+// the very first opening and very last closing character would swallow all
+// of them as one invalid blob, where taking just the first complete
+// structure recovers the model's first (usually fine) answer instead.
+// In plain terms: pulls out just the first complete JSON object/array the AI
+// wrote, ignoring any extra alternates or junk that came after it.
 function extractJsonSubstring(text: string): string | null {
   const firstBrace = text.indexOf('{');
   const firstBracket = text.indexOf('[');
@@ -21,11 +32,38 @@ function extractJsonSubstring(text: string): string | null {
   if (starts.length === 0) return null;
 
   const start = Math.min(...starts);
-  const closeChar = text[start] === '{' ? '}' : ']';
-  const end = text.lastIndexOf(closeChar);
-  if (end === -1 || end < start) return null;
+  const openChar = text[start];
+  const closeChar = openChar === '{' ? '}' : ']';
 
-  return text.slice(start, end + 1);
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === openChar) {
+      depth++;
+    } else if (ch === closeChar) {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+
+  return null;
 }
 
 export function parseJson<T>(raw: string, validate: (x: unknown) => x is T): T {

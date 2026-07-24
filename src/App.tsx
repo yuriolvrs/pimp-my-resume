@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
 import JobDetailPage from './pages/JobDetailPage.tsx';
 import MatchingReviewPage from './pages/MatchingReviewPage.tsx';
+import ResumePage from './pages/ResumePage.tsx';
 import AboutPage from './pages/AboutPage.tsx';
 import DevLlmPage from './pages/DevLlmPage.tsx';
 
@@ -23,7 +24,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f5f6f8] text-slate-900">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 print:hidden">
         <div className="mx-auto flex max-w-4xl h-[54px] items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
@@ -59,13 +60,14 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8 print:p-0 print:max-w-none">
         <Routes>
           <Route path="/" element={<Navigate to="/profile" replace />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
           <Route path="/jobs/:id/match" element={<MatchingReviewPage />} />
+          <Route path="/jobs/:id/resume" element={<ResumePage />} />
           <Route path="/about" element={<AboutPage />} />
           {/* Unlinked dev-only route for Phase 2's proxy test harness. */}
           <Route path="/dev/llm" element={<DevLlmPage />} />
